@@ -1,0 +1,125 @@
+:root {
+  --surface-0: #f5f4f0;
+  --surface-1: #f0efe9;
+  --surface-2: #ffffff;
+  --text-primary: #1c1c1a;
+  --text-secondary: #5f5e5a;
+  --text-muted: #8a8983;
+  --border: #ddd9d0;
+  --border-strong: #c7c2b6;
+  --accent: #185fa5;
+  --accent-fill: #378add;
+  --on-accent: #ffffff;
+  --bg-accent: #e6f1fb;
+  --text-accent: #185fa5;
+  --success: #3b6d11;
+  --bg-success: #eaf3de;
+  --danger: #a32d2d;
+  --bg-danger: #fcebeb;
+  --radius: 10px;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-0: #17171a;
+    --surface-1: #1e1e22;
+    --surface-2: #26262b;
+    --text-primary: #f2f1ec;
+    --text-secondary: #b5b3aa;
+    --text-muted: #86847c;
+    --border: #38383d;
+    --border-strong: #47474d;
+    --accent: #85b7eb;
+    --accent-fill: #378add;
+    --on-accent: #042c53;
+    --bg-accent: #0c447c;
+    --text-accent: #b5d4f4;
+    --success: #97c459;
+    --bg-success: #27500a;
+    --danger: #f09595;
+    --bg-danger: #501313;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+#root {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--surface-1);
+}
+
+input, select, button {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+input[type="email"], input[type="date"], input[type="time"], input[type="text"] {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+button {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  border: 0.5px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+button:active { transform: scale(0.98); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+button.primary {
+  background: var(--accent-fill);
+  border: none;
+  color: var(--on-accent);
+}
+
+button.ghost {
+  border: none;
+  background: transparent;
+}
+
+.card {
+  background: var(--surface-2);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0 0 4px;
+}
+
+.muted { color: var(--text-secondary); }
+.hint { color: var(--text-muted); font-size: 12px; }
+
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+}
+.badge.success { background: var(--bg-success); color: var(--success); }
+.badge.neutral { background: var(--surface-1); color: var(--text-muted); }

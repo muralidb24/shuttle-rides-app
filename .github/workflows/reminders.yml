@@ -1,0 +1,18 @@
+name: Send ride reminders
+
+on:
+  schedule:
+    # 13:00 UTC daily - adjust to land in the morning in your timezone.
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call send-reminders edge function
+        run: |
+          curl -sS -X POST "${{ secrets.SUPABASE_FUNCTIONS_URL }}/send-reminders" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --fail

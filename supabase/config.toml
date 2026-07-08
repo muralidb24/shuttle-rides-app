@@ -1,0 +1,7 @@
+project_id = "shuttle-rides-app"
+
+[functions.notify-neighbors]
+verify_jwt = true
+
+[functions.send-reminders]
+verify_jwt = false
