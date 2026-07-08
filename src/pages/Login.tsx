@@ -13,7 +13,11 @@ export default function Login() {
     setError(null)
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin }
+      // Use the full current path, not just the origin: on GitHub Pages the
+      // app lives under a subpath (https://<user>.github.io/<repo>/), and
+      // window.location.origin alone points at the bare github.io root,
+      // which has no Pages site and 404s.
+      options: { emailRedirectTo: window.location.origin + window.location.pathname }
     })
     setLoading(false)
     if (error) {
