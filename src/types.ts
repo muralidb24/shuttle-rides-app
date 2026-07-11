@@ -2,12 +2,14 @@ export type Direction = 'to_shuttle' | 'from_shuttle'
 
 export type RideRequestStatus = 'open' | 'matched' | 'cancelled'
 export type RideOfferStatus = 'pending' | 'accepted' | 'declined' | 'cancelled'
+export type NotificationType = 'ride_requested' | 'ride_accepted' | 'ride_declined' | 'ride_cancelled'
 
 export interface Profile {
   id: string
   email: string
   full_name: string
   calendar_integrated: boolean
+  email_notifications_enabled: boolean
   created_at: string
 }
 
@@ -33,4 +35,15 @@ export interface RideOffer {
   responded_at: string | null
   ride_request?: RideRequest
   driver?: Profile
+}
+
+export interface AppNotification {
+  id: string
+  user_id: string
+  type: NotificationType
+  title: string
+  body: string
+  ride_request_id: string | null
+  read: boolean
+  created_at: string
 }

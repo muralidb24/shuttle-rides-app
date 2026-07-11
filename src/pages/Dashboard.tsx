@@ -16,6 +16,7 @@ import RideCard from '../components/RideCard'
 import PendingAskCard from '../components/PendingAskCard'
 import CalendarPrompt from '../components/CalendarPrompt'
 import ProfileMenu from '../components/ProfileMenu'
+import NotificationBell from '../components/NotificationBell'
 import type { Profile, RideOffer, RideRequest } from '../types'
 
 interface Props {
@@ -103,7 +104,10 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
     <div style={{ padding: '1.5rem 1.25rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
         <span style={{ fontWeight: 500, fontSize: 15 }}>Hi, {profile.full_name.split(' ')[0]}</span>
-        <ProfileMenu name={profile.full_name} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <NotificationBell userId={profile.id} />
+          <ProfileMenu profile={profile} onProfileChange={onProfileChange} />
+        </div>
       </div>
       <button
         className="ghost"

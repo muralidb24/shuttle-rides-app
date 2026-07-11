@@ -1,5 +1,5 @@
 import { supabase } from '../supabaseClient'
-import type { Direction, Profile, RideOffer, RideRequest } from '../types'
+import type { AppNotification, Direction, Profile, RideOffer, RideRequest } from '../types'
 import type { User } from '@supabase/supabase-js'
 
 export async function getProfile(userId: string): Promise<Profile | null> {
@@ -21,6 +21,11 @@ export async function createProfile(user: User, fullName: string): Promise<Profi
 
 export async function updateCalendarIntegrated(userId: string, integrated: boolean) {
   const { error } = await supabase.from('profiles').update({ calendar_integrated: integrated }).eq('id', userId)
+  if (error) throw error
+}
+
+export async function updateEmailNotificationsEnabled(userId: string, enabled: boolean) {
+  const { error } = await supabase.from('profiles').update({ email_notifications_enabled: enabled }).eq('id', userId)
   if (error) throw error
 }
 
@@ -58,6 +63,28 @@ export async function fetchPendingAsks(userId: string): Promise<RideOffer[]> {
 
   if (error) throw error
   return (data ?? []) as unknown as RideOffer[]
+}
+
+export async function fetchNotifications(userId: string): Promise<AppNotification[]> {
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(30)
+
+  if (error) throw error
+  return (data ?? []) as AppNotification[]
+}
+
+export async function markNotificationRead(id: string) {
+  const { error } = await supabase.from('notifications').update({ read: true }).eq('id', id)
+  if (error) throw error
+}
+
+export async function markAllNotificationsRead(userId: string) {
+  const { error } = await supabase.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false)
+  if (error) throw error
 }
 
 export async function createRideRequest(
