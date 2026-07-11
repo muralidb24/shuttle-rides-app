@@ -131,13 +131,13 @@ export async function declineOffer(offerId: string) {
   if (error) throw error
 }
 
-export async function cancelOffer(offerId: string) {
-  const { error } = await supabase.rpc('cancel_ride_offer', { p_offer_id: offerId })
+export async function cancelOffer(offerId: string, note?: string) {
+  const { error } = await supabase.rpc('cancel_ride_offer', { p_offer_id: offerId, p_note: note ?? null })
   if (error) throw error
 }
 
-export async function cancelRequest(requestId: string) {
-  const { error } = await supabase.rpc('cancel_ride_request', { p_request_id: requestId })
+export async function cancelRequest(requestId: string, note?: string) {
+  const { error } = await supabase.rpc('cancel_ride_request', { p_request_id: requestId, p_note: note ?? null })
   if (error) throw error
 }
 

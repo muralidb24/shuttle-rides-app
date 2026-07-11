@@ -11,12 +11,13 @@ import {
   fetchRequestedRides,
   updateCalendarIntegrated
 } from '../lib/api'
-import { directionLabel, formatDate, formatTime } from '../lib/format'
+import { directionLabel, formatDate, formatTime, pickupGuidance } from '../lib/format'
 import RideCard from '../components/RideCard'
 import PendingAskCard from '../components/PendingAskCard'
 import CalendarPrompt from '../components/CalendarPrompt'
 import ProfileMenu from '../components/ProfileMenu'
 import NotificationBell from '../components/NotificationBell'
+import CancelDialog from '../components/CancelDialog'
 import type { Profile, RideOffer, RideRequest } from '../types'
 
 interface Props {
@@ -26,6 +27,7 @@ interface Props {
 }
 
 type Tab = 'committed' | 'requested'
+type CancelTarget = { kind: 'committed'; offerId: string } | { kind: 'requested'; requestId: string }
 
 export default function Dashboard({ profile, onRequestRide, onProfileChange }: Props) {
   const [committed, setCommitted] = useState<RideOffer[]>([])
@@ -35,6 +37,7 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
   const [busyId, setBusyId] = useState<string | null>(null)
   const [justAccepted, setJustAccepted] = useState<RideOffer | null>(null)
   const [tab, setTab] = useState<Tab>('committed')
+  const [cancelTarget, setCancelTarget] = useState<CancelTarget | null>(null)
 
   const refresh = useCallback(async () => {
     const [c, r, p] = await Promise.all([
@@ -84,13 +87,14 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
     }
   }
 
-  async function handleCancelCommitted(offerId: string) {
-    await cancelOffer(offerId)
-    await refresh()
-  }
-
-  async function handleCancelRequested(requestId: string) {
-    await cancelRequest(requestId)
+  async function handleConfirmCancel(note: string) {
+    if (!cancelTarget) return
+    if (cancelTarget.kind === 'committed') {
+      await cancelOffer(cancelTarget.offerId, note)
+    } else {
+      await cancelRequest(cancelTarget.requestId, note)
+    }
+    setCancelTarget(null)
     await refresh()
   }
 
@@ -182,8 +186,8 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
                 title={`Driving ${request.requester?.full_name ?? 'a neighbor'}`}
                 date={formatDate(request.shuttle_date)}
                 time={formatTime(request.shuttle_time)}
-                meta={directionLabel(request.direction)}
-                onCancel={() => handleCancelCommitted(offer.id)}
+                meta={pickupGuidance(request.direction, request.shuttle_time)}
+                onCancel={() => setCancelTarget({ kind: 'committed', offerId: offer.id })}
               />
             )
           })
@@ -203,15 +207,23 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
             return (
               <RideCard
                 key={request.id}
-                title={request.direction === 'to_shuttle' ? 'Drop-off to shuttle' : 'Pickup from shuttle'}
+                title={directionLabel(request.direction) === 'traveling out' ? 'Traveling out' : 'Returning'}
                 date={formatDate(request.shuttle_date)}
                 time={formatTime(request.shuttle_time)}
                 meta={statusLabel}
-                onCancel={() => handleCancelRequested(request.id)}
+                onCancel={() => setCancelTarget({ kind: 'requested', requestId: request.id })}
               />
             )
           })
         ))}
+
+      {cancelTarget && (
+        <CancelDialog
+          title={cancelTarget.kind === 'committed' ? "Cancel this ride you're driving?" : 'Cancel your ride request?'}
+          onConfirm={handleConfirmCancel}
+          onClose={() => setCancelTarget(null)}
+        />
+      )}
     </div>
   )
 }

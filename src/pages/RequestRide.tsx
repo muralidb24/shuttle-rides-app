@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import DirectionToggle from '../components/DirectionToggle'
 import { createRideRequest } from '../lib/api'
+import { isOnHalfHour, pickupGuidance } from '../lib/format'
 import type { Direction } from '../types'
 
 interface Props {
@@ -19,6 +20,10 @@ export default function RequestRide({ userId, onCreated, onCancel }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!date || !time) return
+    if (!isOnHalfHour(time)) {
+      setError('The shuttle only leaves on the hour or half hour - pick a :00 or :30 time.')
+      return
+    }
     setLoading(true)
     setError(null)
     try {
@@ -38,12 +43,28 @@ export default function RequestRide({ userId, onCreated, onCancel }: Props) {
         <div style={{ marginBottom: 12 }}>
           <DirectionToggle value={direction} onChange={setDirection} />
         </div>
+        <p className="hint" style={{ margin: '0 0 16px' }}>
+          {direction === 'to_shuttle'
+            ? "We'll let your driver know to pick you up from home."
+            : "We'll let your driver know to meet you at the shuttle stop."}
+        </p>
 
         <p className="label">Shuttle date</p>
         <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} style={{ marginBottom: 10 }} />
 
         <p className="label">Shuttle time</p>
-        <input type="time" required value={time} onChange={(e) => setTime(e.target.value)} style={{ marginBottom: 16 }} />
+        <input
+          type="time"
+          required
+          step={1800}
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          style={{ marginBottom: 6 }}
+        />
+        <p className="hint" style={{ margin: '0 0 16px' }}>
+          The shuttle leaves on the hour or half hour. This is the shuttle's departure time, not your pickup time
+          {time && isOnHalfHour(time) ? ` - ${pickupGuidance(direction, time)}.` : '.'}
+        </p>
 
         {error && <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 0 }}>{error}</p>}
 

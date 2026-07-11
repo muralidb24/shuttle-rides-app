@@ -23,7 +23,7 @@ export default function DirectionToggle({ value, onChange }: Props) {
               color: active ? 'var(--text-accent)' : 'var(--text-secondary)'
             }}
           >
-            {option === 'to_shuttle' ? 'To shuttle' : 'From shuttle'}
+            {option === 'to_shuttle' ? 'Traveling out' : 'Returning'}
           </button>
         )
       })}

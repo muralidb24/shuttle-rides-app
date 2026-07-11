@@ -1,5 +1,5 @@
 import { Calendar, Clock, UserRound } from 'lucide-react'
-import { directionLabel, formatDate, formatTime } from '../lib/format'
+import { formatDate, formatTime, pickupGuidance } from '../lib/format'
 import type { RideOffer } from '../types'
 
 interface Props {
@@ -24,15 +24,15 @@ export default function PendingAskCard({ offer, calendarIntegrated, onAccept, on
           {calendarIntegrated ? 'Calendar synced' : 'No calendar linked'}
         </span>
       </div>
-      <div className="ride-card-meta" style={{ marginBottom: 8 }}>
+      <div className="ride-card-meta" style={{ marginBottom: 4 }}>
         <span>
           <Calendar size={12} /> {formatDate(request.shuttle_date)}
         </span>
         <span>
           <Clock size={12} /> {formatTime(request.shuttle_time)}
         </span>
-        <span>{directionLabel(request.direction)}</span>
       </div>
+      <p className="hint" style={{ margin: '0 0 8px' }}>{pickupGuidance(request.direction, request.shuttle_time)}</p>
 
       {calendarIntegrated ? (
         <button className="primary" style={{ width: '100%', fontSize: 13 }} disabled={busy} onClick={() => onAccept(offer.id)}>

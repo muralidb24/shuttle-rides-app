@@ -51,11 +51,29 @@ async function sendEmail(to: string, subject: string, html: string) {
   }
 }
 
-// Placeholder for a real calendar free/busy check (see src/lib/calendar.ts for
-// the matching client-side note). Always "available" until Google Calendar
-// OAuth is wired up.
 async function isAvailable(_driverId: string, _date: string, _time: string): Promise<boolean> {
   return true
+}
+
+function subtractMinutes(time: string, minutes: number): string {
+  const [h, m] = time.split(':').map(Number)
+  const total = h * 60 + m - minutes
+  const wrapped = ((total % 1440) + 1440) % 1440
+  const hh = Math.floor(wrapped / 60)
+  const mm = wrapped % 60
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
+}
+
+// The shuttle is a fixed ~10 minute drive away and always leaves on the hour
+// or half hour, so a driver picking someone up to catch it should leave home
+// about 15 minutes before the shuttle time (10 min drive + 5 min buffer).
+// Returning is simpler - just be at the stop when the shuttle arrives.
+function pickupGuidance(direction: string, shuttleTime: string): string {
+  if (direction === 'to_shuttle') {
+    const pickup = subtractMinutes(shuttleTime, 15)
+    return `Plan to pick them up from home around ${pickup} - about 15 minutes before the ${shuttleTime} shuttle.`
+  }
+  return `Plan to be at the shuttle stop by ${shuttleTime} to bring them home.`
 }
 
 Deno.serve(async (req) => {
@@ -97,8 +115,9 @@ Deno.serve(async (req) => {
       })
     }
 
-    const direction = rideRequest.direction === 'to_shuttle' ? 'to the shuttle' : 'from the shuttle'
+    const direction = rideRequest.direction === 'to_shuttle' ? 'traveling out' : 'returning home'
     const requesterName = rideRequest.requester?.full_name ?? 'A neighbor'
+    const guidance = pickupGuidance(rideRequest.direction, rideRequest.shuttle_time)
 
     let asked = 0
 
@@ -128,16 +147,17 @@ Deno.serve(async (req) => {
       if (offer.status !== 'pending') continue
 
       asked += 1
-      const subject = `Ride requested: ${requesterName} needs a ride ${direction}`
+      const subject = `Ride requested: ${requesterName} is ${direction}`
+      const intro = `<p>${requesterName} is ${direction} and needs a ride for the ${rideRequest.shuttle_date} shuttle at ${rideRequest.shuttle_time}.</p><p>${guidance}</p>`
       const body = neighbor.calendar_integrated
-        ? `<p>${requesterName} needs a ride ${direction} on ${rideRequest.shuttle_date} at ${rideRequest.shuttle_time}.</p><p>You're free at that time. <a href="${APP_URL}">Open the app</a> to offer to drive.</p>`
-        : `<p>${requesterName} needs a ride ${direction} on ${rideRequest.shuttle_date} at ${rideRequest.shuttle_time}.</p><p>Are you available and willing to give this ride? <a href="${APP_URL}">Open the app</a> to respond.</p>`
+        ? `${intro}<p>You're free at that time. <a href="${APP_URL}">Open the app</a> to offer to drive.</p>`
+        : `${intro}<p>Are you available and willing to give this ride? <a href="${APP_URL}">Open the app</a> to respond.</p>`
 
       await supabaseAdmin.from('notifications').insert({
         user_id: neighbor.id,
         type: 'ride_requested',
         title: 'Ride requested',
-        body: `${requesterName} needs a ride ${direction}, ${rideRequest.shuttle_date} at ${rideRequest.shuttle_time}.`,
+        body: `${requesterName} is ${direction}, shuttle at ${rideRequest.shuttle_time} on ${rideRequest.shuttle_date}. ${guidance}`,
         ride_request_id: rideRequest.id
       })
 
