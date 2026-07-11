@@ -123,3 +123,79 @@ button.ghost {
 }
 .badge.success { background: var(--bg-success); color: var(--success); }
 .badge.neutral { background: var(--surface-1); color: var(--text-muted); }
+
+.ride-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: var(--surface-2);
+}
+.ride-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-accent);
+  color: var(--text-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ride-card-body { flex: 1; min-width: 0; }
+.ride-card-title { font-size: 13px; margin: 0; }
+.ride-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.ride-card-meta span { display: flex; align-items: center; gap: 4px; }
+.ride-card-cancel { flex-shrink: 0; padding: 6px; color: var(--text-muted); }
+
+.tabs {
+  display: flex;
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.tabs button {
+  flex: 1;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.tabs button.active { background: var(--bg-accent); color: var(--text-accent); }
+
+.empty-state {
+  text-align: center;
+  padding: 28px 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  text-decoration: none;
+  width: 100%;
+  border: none;
+  background: transparent;
+  height: auto;
+  cursor: pointer;
+  text-align: left;
+}
+.menu-item:hover { background: var(--surface-1); }

@@ -1,36 +1,38 @@
+import { Car, Calendar, Clock, X } from 'lucide-react'
+
 interface Props {
   title: string
-  subtitle: string
+  date: string
+  time: string
+  meta?: string
   onCancel?: () => void
-  cancelLabel?: string
 }
 
-export default function RideCard({ title, subtitle, onCancel, cancelLabel }: Props) {
+export default function RideCard({ title, date, time, meta, onCancel }: Props) {
   return (
-    <div
-      style={{
-        border: '0.5px solid var(--border)',
-        borderRadius: 'var(--radius)',
-        padding: '10px 12px',
-        marginBottom: 8,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        background: 'var(--surface-2)'
-      }}
-    >
-      <div>
-        <p style={{ fontSize: 13, margin: 0 }}>{title}</p>
-        <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>{subtitle}</p>
+    <div className="ride-card">
+      <div className="ride-card-icon">
+        <Car size={18} />
+      </div>
+      <div className="ride-card-body">
+        <p className="ride-card-title">{title}</p>
+        <div className="ride-card-meta">
+          <span>
+            <Calendar size={12} /> {date}
+          </span>
+          <span>
+            <Clock size={12} /> {time}
+          </span>
+        </div>
+        {meta && (
+          <p className="hint" style={{ margin: '2px 0 0' }}>
+            {meta}
+          </p>
+        )}
       </div>
       {onCancel && (
-        <button
-          className="ghost"
-          onClick={onCancel}
-          aria-label={cancelLabel ?? 'Cancel ride'}
-          style={{ height: 'auto', padding: 4, color: 'var(--text-muted)' }}
-        >
-          Cancel
+        <button className="ghost ride-card-cancel" onClick={onCancel} aria-label="Cancel ride">
+          <X size={16} />
         </button>
       )}
     </div>

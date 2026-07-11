@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User guide - Neighborhood shuttle rides</title>
+    <style>
+      :root {
+        --text-primary: #1c1c1a;
+        --text-secondary: #5f5e5a;
+        --border: #ddd9d0;
+        --bg-accent: #e6f1fb;
+        --text-accent: #185fa5;
+        --surface: #ffffff;
+        --page-bg: #f5f4f0;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --text-primary: #f2f1ec;
+          --text-secondary: #b5b3aa;
+          --border: #38383d;
+          --bg-accent: #0c447c;
+          --text-accent: #b5d4f4;
+          --surface: #26262b;
+          --page-bg: #17171a;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--page-bg);
+        color: var(--text-primary);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+      }
+      .wrap { max-width: 640px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+      h1 { font-size: 22px; font-weight: 500; margin: 0 0 4px; }
+      .subtitle { color: var(--text-secondary); font-size: 14px; margin: 0 0 28px; }
+      h2 { font-size: 16px; font-weight: 500; margin: 28px 0 8px; display: flex; align-items: center; gap: 8px; }
+      .step-num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 22px; height: 22px; border-radius: 50%;
+        background: var(--bg-accent); color: var(--text-accent);
+        font-size: 12px; font-weight: 500; flex-shrink: 0;
+      }
+      p { font-size: 14px; color: var(--text-secondary); margin: 0 0 8px; }
+      .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+      a { color: var(--text-accent); }
+      .back { display: inline-block; margin-top: 24px; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Neighborhood shuttle rides</h1>
+      <p class="subtitle">A quick guide to requesting and giving rides to the airport shuttle stop.</p>
+
+      <div class="card">
+        <h2><span class="step-num">1</span> Sign in</h2>
+        <p>Enter your email on the sign-in screen. You'll get an email with a link — click it and you're in, no password needed. The first time, we'll ask what to call you.</p>
+      </div>
+
+      <div class="card">
+        <h2><span class="step-num">2</span> Request a ride</h2>
+        <p>Tap "Request a ride" from your dashboard. Choose whether you need a ride <strong>to</strong> the shuttle (heading out) or <strong>from</strong> the shuttle (coming home), then enter the shuttle's date and time. Every neighbor gets notified.</p>
+      </div>
+
+      <div class="card">
+        <h2><span class="step-num">3</span> Offer to drive</h2>
+        <p>When a neighbor needs a ride, you'll see it under "Needs your response" on your dashboard, and get an email too. If you've turned on calendar sync, we only ask when you're free — just tap "Offer to drive." Otherwise you'll be asked if you're available and willing.</p>
+      </div>
+
+      <div class="card">
+        <h2><span class="step-num">4</span> Add it to your calendar</h2>
+        <p>Once you commit to a ride, we'll offer to add it to your calendar. If you'd rather not, we'll email you a reminder the day before and the day of instead.</p>
+      </div>
+
+      <div class="card">
+        <h2><span class="step-num">5</span> Track and cancel rides</h2>
+        <p>Your dashboard has two tabs: <strong>Committed</strong> (rides you're driving) and <strong>Requested</strong> (rides you've asked for). Plans change — either side can cancel a ride any time from these lists.</p>
+      </div>
+
+      <a class="back" href="./">&larr; Back to the app</a>
+    </div>
+  </body>
+</html>
