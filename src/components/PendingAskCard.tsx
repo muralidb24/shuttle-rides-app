@@ -36,11 +36,11 @@ export default function PendingAskCard({ offer, calendarIntegrated, onAccept, on
 
       {calendarIntegrated ? (
         <button className="primary" style={{ width: '100%', fontSize: 13 }} disabled={busy} onClick={() => onAccept(offer.id)}>
-          Offer to drive
+          Offer to give a ride
         </button>
       ) : (
         <>
-          <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 8px' }}>Available and willing to drive?</p>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 8px' }}>Available and willing to give a ride?</p>
           <div style={{ display: 'flex', gap: 8 }}>
             <button style={{ flex: 1, fontSize: 13 }} disabled={busy} onClick={() => onAccept(offer.id)}>
               I can help

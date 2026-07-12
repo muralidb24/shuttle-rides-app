@@ -26,7 +26,7 @@ interface Props {
   onProfileChange: (profile: Profile) => void
 }
 
-type Tab = 'committed' | 'requested' | 'past'
+type Tab = 'committed' | 'requested'
 type CancelTarget = { kind: 'committed'; offerId: string } | { kind: 'requested'; requestId: string }
 
 function todayStr(): string {
@@ -73,11 +73,10 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
   const today = useMemo(() => todayStr(), [])
   const isPast = useCallback((date: string) => date < today, [today])
 
+  // Past-dated rides are simply dropped from both lists once the shuttle date
+  // has passed - there's no separate "Past" view to keep the UI simple.
   const committedActive = useMemo(() => committed.filter((o) => !isPast(o.ride_request!.shuttle_date)), [committed, isPast])
-  const committedPast = useMemo(() => committed.filter((o) => isPast(o.ride_request!.shuttle_date)), [committed, isPast])
   const requestedActive = useMemo(() => requested.filter((r) => !isPast(r.shuttle_date)), [requested, isPast])
-  const requestedPast = useMemo(() => requested.filter((r) => isPast(r.shuttle_date)), [requested, isPast])
-  const pastCount = committedPast.length + requestedPast.length
 
   async function handleAccept(offerId: string) {
     setBusyId(offerId)
@@ -181,9 +180,6 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
         <button className={tab === 'requested' ? 'active' : ''} onClick={() => setTab('requested')}>
           Requested ({requestedActive.length})
         </button>
-        <button className={tab === 'past' ? 'active' : ''} onClick={() => setTab('past')}>
-          Past ({pastCount})
-        </button>
       </div>
 
       {tab === 'committed' &&
@@ -200,7 +196,7 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
             return (
               <RideCard
                 key={offer.id}
-                title={`Driving ${request.requester?.full_name ?? 'a neighbor'}`}
+                title={`Giving a ride to ${request.requester?.full_name ?? 'a neighbor'}`}
                 date={formatDate(request.shuttle_date)}
                 time={formatTime(request.shuttle_time)}
                 meta={pickupGuidance(request.direction, request.shuttle_time)}
@@ -222,61 +218,23 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
         ) : (
           requestedActive.map((request) => {
             const driver = request.offers?.find((o) => o.status === 'accepted')?.driver
-            const statusLabel = request.status === 'matched' ? 'driver confirmed' : 'waiting for a driver'
             return (
               <RideCard
                 key={request.id}
                 title={directionLabel(request.direction) === 'traveling out' ? 'Traveling out' : 'Returning'}
                 date={formatDate(request.shuttle_date)}
                 time={formatTime(request.shuttle_time)}
-                meta={statusLabel}
-                contact={driver ? { name: driver.full_name, email: driver.email } : undefined}
+                meta={driver ? undefined : 'Waiting for a ride giver'}
+                confirmedContact={driver ? { name: driver.full_name, email: driver.email } : undefined}
                 onCancel={() => setCancelTarget({ kind: 'requested', requestId: request.id })}
               />
             )
           })
         ))}
 
-      {tab === 'past' &&
-        (pastCount === 0 ? (
-          !loading && (
-            <div className="empty-state">
-              <CarFront size={22} style={{ marginBottom: 6 }} />
-              <p style={{ margin: 0 }}>No past rides yet.</p>
-            </div>
-          )
-        ) : (
-          <>
-            {committedPast.map((offer) => {
-              const request = offer.ride_request!
-              return (
-                <RideCard
-                  key={offer.id}
-                  title={`Drove ${request.requester?.full_name ?? 'a neighbor'}`}
-                  date={formatDate(request.shuttle_date)}
-                  time={formatTime(request.shuttle_time)}
-                  meta="Past ride"
-                />
-              )
-            })}
-            {requestedPast.map((request) => {
-              const driver = request.offers?.find((o) => o.status === 'accepted')?.driver
-              return (
-                <RideCard
-                  key={request.id}
-                  title={directionLabel(request.direction) === 'traveling out' ? 'Traveling out' : 'Returning'}
-                  date={formatDate(request.shuttle_date)}
-                  time={formatTime(request.shuttle_time)}
-                  meta={driver ? `Drove by ${driver.full_name.split(' ')[0]}` : 'Past ride'}
-                />
-              )
-            })}
-          </>
-        ))}
-
       {cancelTarget && (
         <CancelDialog
-          title={cancelTarget.kind === 'committed' ? "Cancel this ride you're driving?" : 'Cancel your ride request?'}
+          title={cancelTarget.kind === 'committed' ? "Cancel this ride you're giving?" : 'Cancel your ride request?'}
           onConfirm={handleConfirmCancel}
           onClose={() => setCancelTarget(null)}
         />

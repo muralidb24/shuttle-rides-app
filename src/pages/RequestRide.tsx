@@ -45,14 +45,14 @@ export default function RequestRide({ userId, onCreated, onCancel }: Props) {
         </div>
         <p className="hint" style={{ margin: '0 0 16px' }}>
           {direction === 'to_shuttle'
-            ? "We'll let your driver know to pick you up from home."
-            : "We'll let your driver know to meet you at the shuttle stop."}
+            ? "We'll let your ride giver know to pick you up from home."
+            : "We'll let your ride giver know to meet you at the shuttle stop."}
         </p>
 
-        <p className="label">Shuttle date</p>
+        <p className="label">{direction === 'to_shuttle' ? 'Travel date' : 'Return date'}</p>
         <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} style={{ marginBottom: 10 }} />
 
-        <p className="label">{direction === 'to_shuttle' ? 'Shuttle departure time' : 'Shuttle arrival time'}</p>
+        <p className="label">{direction === 'to_shuttle' ? 'Logan Express departure time' : 'Logan Express arrival time'}</p>
         <input
           type="time"
           required

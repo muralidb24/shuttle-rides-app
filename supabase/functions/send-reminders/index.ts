@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
 
     const when = request.shuttle_date === todayStr ? 'today' : 'tomorrow'
     const requesterName = request.requester?.full_name ?? 'your neighbor'
-    const driverName = offer.driver?.full_name ?? 'your driver'
+    const driverName = offer.driver?.full_name ?? 'your ride giver'
     const guidance = pickupGuidance(request.direction, request.shuttle_time)
 
     if (request.requester?.email && request.requester.email_notifications_enabled !== false) {
@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
     }
 
     if (offer.driver?.email && offer.driver.email_notifications_enabled !== false) {
-      const subject = `Reminder: you're driving ${requesterName} ${when}`
+      const subject = `Reminder: you're giving ${requesterName} a ride ${when}`
       const html = `<p>This is a reminder that you're giving ${requesterName} a ride ${when}, ${request.shuttle_date} for the ${request.shuttle_time} shuttle.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
       await sendEmail(offer.driver.email, subject, html)
       sent += 1

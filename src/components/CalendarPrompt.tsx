@@ -11,7 +11,7 @@ interface Props {
 export default function CalendarPrompt({ offer, onDone }: Props) {
   const request = offer.ride_request!
   const requesterName = request.requester?.full_name ?? 'your neighbor'
-  const title = `Shuttle ride: drive ${requesterName}`
+  const title = `Shuttle ride: give ${requesterName} a ride`
   const description = `Give ${requesterName} a ride ${directionLabel(request.direction)}.`
 
   const event = {
@@ -36,7 +36,7 @@ export default function CalendarPrompt({ offer, onDone }: Props) {
         <span style={{ fontWeight: 500, fontSize: 15 }}>Ride confirmed</span>
       </div>
       <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 16px' }}>
-        You're driving {requesterName} {directionLabel(request.direction)}, {formatDate(request.shuttle_date)} at{' '}
+        You're giving {requesterName} a ride {directionLabel(request.direction)}, {formatDate(request.shuttle_date)} at{' '}
         {formatTime(request.shuttle_time)}.
       </p>
       <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 8px' }}>Add this to your calendar?</p>

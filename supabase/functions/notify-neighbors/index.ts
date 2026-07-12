@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
       const subject = `Ride requested: ${requesterName} is ${direction}`
       const intro = `<p>${requesterName} is ${direction} and needs a ride for the ${rideRequest.shuttle_date} shuttle at ${rideRequest.shuttle_time}.</p><p>${guidance}</p>`
       const body = neighbor.calendar_integrated
-        ? `${intro}<p>You're free at that time. <a href="${APP_URL}">Open the app</a> to offer to drive.</p>`
+        ? `${intro}<p>You're free at that time. <a href="${APP_URL}">Open the app</a> to offer to give this ride.</p>`
         : `${intro}<p>Are you available and willing to give this ride? <a href="${APP_URL}">Open the app</a> to respond.</p>`
 
       await supabaseAdmin.from('notifications').insert({
