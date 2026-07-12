@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Calendar, CarFront, Plus } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import {
@@ -26,8 +26,13 @@ interface Props {
   onProfileChange: (profile: Profile) => void
 }
 
-type Tab = 'committed' | 'requested'
+type Tab = 'committed' | 'requested' | 'past'
 type CancelTarget = { kind: 'committed'; offerId: string } | { kind: 'requested'; requestId: string }
+
+function todayStr(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 export default function Dashboard({ profile, onRequestRide, onProfileChange }: Props) {
   const [committed, setCommitted] = useState<RideOffer[]>([])
@@ -64,6 +69,15 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
       supabase.removeChannel(channel)
     }
   }, [profile.id, refresh])
+
+  const today = useMemo(() => todayStr(), [])
+  const isPast = useCallback((date: string) => date < today, [today])
+
+  const committedActive = useMemo(() => committed.filter((o) => !isPast(o.ride_request!.shuttle_date)), [committed, isPast])
+  const committedPast = useMemo(() => committed.filter((o) => isPast(o.ride_request!.shuttle_date)), [committed, isPast])
+  const requestedActive = useMemo(() => requested.filter((r) => !isPast(r.shuttle_date)), [requested, isPast])
+  const requestedPast = useMemo(() => requested.filter((r) => isPast(r.shuttle_date)), [requested, isPast])
+  const pastCount = committedPast.length + requestedPast.length
 
   async function handleAccept(offerId: string) {
     setBusyId(offerId)
@@ -162,15 +176,18 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
 
       <div className="tabs">
         <button className={tab === 'committed' ? 'active' : ''} onClick={() => setTab('committed')}>
-          Committed ({committed.length})
+          Committed ({committedActive.length})
         </button>
         <button className={tab === 'requested' ? 'active' : ''} onClick={() => setTab('requested')}>
-          Requested ({requested.length})
+          Requested ({requestedActive.length})
+        </button>
+        <button className={tab === 'past' ? 'active' : ''} onClick={() => setTab('past')}>
+          Past ({pastCount})
         </button>
       </div>
 
       {tab === 'committed' &&
-        (committed.length === 0 ? (
+        (committedActive.length === 0 ? (
           !loading && (
             <div className="empty-state">
               <CarFront size={22} style={{ marginBottom: 6 }} />
@@ -178,7 +195,7 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
             </div>
           )
         ) : (
-          committed.map((offer) => {
+          committedActive.map((offer) => {
             const request = offer.ride_request!
             return (
               <RideCard
@@ -187,6 +204,7 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
                 date={formatDate(request.shuttle_date)}
                 time={formatTime(request.shuttle_time)}
                 meta={pickupGuidance(request.direction, request.shuttle_time)}
+                contact={request.requester ? { name: request.requester.full_name, email: request.requester.email } : undefined}
                 onCancel={() => setCancelTarget({ kind: 'committed', offerId: offer.id })}
               />
             )
@@ -194,7 +212,7 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
         ))}
 
       {tab === 'requested' &&
-        (requested.length === 0 ? (
+        (requestedActive.length === 0 ? (
           !loading && (
             <div className="empty-state">
               <CarFront size={22} style={{ marginBottom: 6 }} />
@@ -202,7 +220,8 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
             </div>
           )
         ) : (
-          requested.map((request) => {
+          requestedActive.map((request) => {
+            const driver = request.offers?.find((o) => o.status === 'accepted')?.driver
             const statusLabel = request.status === 'matched' ? 'driver confirmed' : 'waiting for a driver'
             return (
               <RideCard
@@ -211,10 +230,48 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
                 date={formatDate(request.shuttle_date)}
                 time={formatTime(request.shuttle_time)}
                 meta={statusLabel}
+                contact={driver ? { name: driver.full_name, email: driver.email } : undefined}
                 onCancel={() => setCancelTarget({ kind: 'requested', requestId: request.id })}
               />
             )
           })
+        ))}
+
+      {tab === 'past' &&
+        (pastCount === 0 ? (
+          !loading && (
+            <div className="empty-state">
+              <CarFront size={22} style={{ marginBottom: 6 }} />
+              <p style={{ margin: 0 }}>No past rides yet.</p>
+            </div>
+          )
+        ) : (
+          <>
+            {committedPast.map((offer) => {
+              const request = offer.ride_request!
+              return (
+                <RideCard
+                  key={offer.id}
+                  title={`Drove ${request.requester?.full_name ?? 'a neighbor'}`}
+                  date={formatDate(request.shuttle_date)}
+                  time={formatTime(request.shuttle_time)}
+                  meta="Past ride"
+                />
+              )
+            })}
+            {requestedPast.map((request) => {
+              const driver = request.offers?.find((o) => o.status === 'accepted')?.driver
+              return (
+                <RideCard
+                  key={request.id}
+                  title={directionLabel(request.direction) === 'traveling out' ? 'Traveling out' : 'Returning'}
+                  date={formatDate(request.shuttle_date)}
+                  time={formatTime(request.shuttle_time)}
+                  meta={driver ? `Drove by ${driver.full_name.split(' ')[0]}` : 'Past ride'}
+                />
+              )
+            })}
+          </>
         ))}
 
       {cancelTarget && (

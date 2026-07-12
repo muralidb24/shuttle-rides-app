@@ -20,12 +20,19 @@ export interface CalendarEventInput {
   title: string
   description: string
   date: string // YYYY-MM-DD
-  time: string // HH:MM
+  time: string // HH:MM or HH:MM:SS (Postgres `time` columns come back with seconds)
   durationMinutes?: number
 }
 
 function toDateTime(date: string, time: string): Date {
-  return new Date(`${date}T${time}:00`)
+  // Build the Date from numeric parts instead of concatenating strings -
+  // Postgres `time` values round-trip through supabase-js as "HH:MM:SS", and
+  // naively appending ":00" to that (assuming "HH:MM") produces a malformed
+  // string that `new Date(...)` silently turns into an Invalid Date, which
+  // then throws downstream on `.toISOString()`.
+  const [year, month, day] = date.split('-').map(Number)
+  const [hour, minute] = time.split(':').map(Number)
+  return new Date(year, month - 1, day, hour, minute, 0, 0)
 }
 
 function formatGoogleDate(d: Date): string {

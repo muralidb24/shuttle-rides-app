@@ -1,14 +1,21 @@
-import { Car, Calendar, Clock, X } from 'lucide-react'
+import { Car, Calendar, Clock, Mail, X } from 'lucide-react'
+
+interface Contact {
+  name: string
+  email: string
+}
 
 interface Props {
   title: string
   date: string
   time: string
   meta?: string
+  contact?: Contact
   onCancel?: () => void
+  cancelLabel?: string
 }
 
-export default function RideCard({ title, date, time, meta, onCancel }: Props) {
+export default function RideCard({ title, date, time, meta, contact, onCancel, cancelLabel }: Props) {
   return (
     <div className="ride-card">
       <div className="ride-card-icon">
@@ -29,9 +36,17 @@ export default function RideCard({ title, date, time, meta, onCancel }: Props) {
             {meta}
           </p>
         )}
+        {contact && (
+          <a
+            href={`mailto:${contact.email}`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-accent)', marginTop: 4 }}
+          >
+            <Mail size={12} /> Contact {contact.name.split(' ')[0]}
+          </a>
+        )}
       </div>
       {onCancel && (
-        <button className="ghost ride-card-cancel" onClick={onCancel} aria-label="Cancel ride">
+        <button className="ghost ride-card-cancel" onClick={onCancel} aria-label={cancelLabel ?? 'Cancel ride'}>
           <X size={16} />
         </button>
       )}

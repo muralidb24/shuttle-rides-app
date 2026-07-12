@@ -52,7 +52,7 @@ export default function RequestRide({ userId, onCreated, onCancel }: Props) {
         <p className="label">Shuttle date</p>
         <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} style={{ marginBottom: 10 }} />
 
-        <p className="label">Shuttle time</p>
+        <p className="label">{direction === 'to_shuttle' ? 'Shuttle departure time' : 'Shuttle arrival time'}</p>
         <input
           type="time"
           required
@@ -62,7 +62,9 @@ export default function RequestRide({ userId, onCreated, onCancel }: Props) {
           style={{ marginBottom: 6 }}
         />
         <p className="hint" style={{ margin: '0 0 16px' }}>
-          The shuttle leaves on the hour or half hour. This is the shuttle's departure time, not your pickup time
+          {direction === 'to_shuttle'
+            ? 'The shuttle leaves on the hour or half hour. This is when it departs, not your pickup time'
+            : 'The shuttle arrives on the hour or half hour. This is when it gets back, not your pickup time'}
           {time && isOnHalfHour(time) ? ` - ${pickupGuidance(direction, time)}.` : '.'}
         </p>
 

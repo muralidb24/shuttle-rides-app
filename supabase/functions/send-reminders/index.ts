@@ -1,7 +1,7 @@
-// Edge function: sends "ride tomorrow" / "ride today" reminder emails to
-// drivers who accepted a ride but chose not to have it added to their
-// calendar. Meant to be triggered once a day by a GitHub Actions cron
-// workflow (see .github/workflows/reminders.yml), not by the frontend.
+// Edge function: sends "ride tomorrow" / "ride today" reminder emails to both
+// the driver and the requester on every matched ride. Meant to be triggered
+// once a day by a GitHub Actions cron workflow (see
+// .github/workflows/reminders.yml), not by the frontend.
 //
 // Deploy: supabase functions deploy send-reminders --no-verify-jwt
 // Secrets needed (supabase secrets set ...):
@@ -48,6 +48,25 @@ function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10)
 }
 
+function subtractMinutes(time: string, minutes: number): string {
+  const [h, m] = time.split(':').map(Number)
+  const total = h * 60 + m - minutes
+  const wrapped = ((total % 1440) + 1440) % 1440
+  const hh = Math.floor(wrapped / 60)
+  const mm = wrapped % 60
+  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
+}
+
+// Riders only give the shuttle date/time - work out pickup guidance from
+// direction + that time (10-min shuttle, so a 15-min-early pickup covers it).
+function pickupGuidance(direction: string, shuttleTime: string): string {
+  if (direction === 'to_shuttle') {
+    const pickup = subtractMinutes(shuttleTime, 15)
+    return `Pick up from home around ${pickup} - about 15 minutes before the ${shuttleTime} shuttle.`
+  }
+  return `Be at the shuttle stop by ${shuttleTime}.`
+}
+
 Deno.serve(async (req) => {
   const auth = req.headers.get('Authorization') ?? ''
   if (!CRON_SECRET || auth !== `Bearer ${CRON_SECRET}`) {
@@ -59,13 +78,16 @@ Deno.serve(async (req) => {
   const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
   const tomorrowStr = isoDate(tomorrow)
 
+  // Reminders go to both parties on every matched ride happening today or
+  // tomorrow, regardless of calendar-sync status - calendar sync only
+  // controls whether the app also nudges the driver to add the event to
+  // their own calendar, not whether they get a reminder email.
   const { data: offers, error } = await supabaseAdmin
     .from('ride_offers')
-    .select('*, ride_request:ride_requests(*, requester:profiles!ride_requests_requester_id_fkey(*)), driver:profiles!ride_offers_driver_id_fkey(*)')
+    .select(
+      '*, ride_request:ride_requests(*, requester:profiles!ride_requests_requester_id_fkey(*)), driver:profiles!ride_offers_driver_id_fkey(*)'
+    )
     .eq('status', 'accepted')
-    .eq('calendar_added', false)
-    .eq('reminder_opt_in', true)
-    .in('ride_request.shuttle_date', [todayStr, tomorrowStr])
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 })
@@ -76,22 +98,29 @@ Deno.serve(async (req) => {
   for (const offer of offers ?? []) {
     const request = offer.ride_request
     if (!request) continue
-    // The `in` filter above applies at the top level for embedded resources in
-    // some client versions; double check here so we never mail the wrong day.
     if (request.shuttle_date !== todayStr && request.shuttle_date !== tomorrowStr) continue
     if (offer.last_reminder_sent === todayStr) continue
 
     const when = request.shuttle_date === todayStr ? 'today' : 'tomorrow'
     const requesterName = request.requester?.full_name ?? 'your neighbor'
-    const direction = request.direction === 'to_shuttle' ? 'to the shuttle' : 'from the shuttle'
+    const driverName = offer.driver?.full_name ?? 'your driver'
+    const guidance = pickupGuidance(request.direction, request.shuttle_time)
 
-    const subject = `Reminder: you're driving ${requesterName} ${when}`
-    const html = `<p>This is a reminder that you're giving ${requesterName} a ride ${direction} ${when}, ${request.shuttle_date} at ${request.shuttle_time}.</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
+    if (request.requester?.email && request.requester.email_notifications_enabled !== false) {
+      const subject = `Reminder: your ride ${when}`
+      const html = `<p>This is a reminder that ${driverName} is giving you a ride ${when}, ${request.shuttle_date} for the ${request.shuttle_time} shuttle.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
+      await sendEmail(request.requester.email, subject, html)
+      sent += 1
+    }
 
-    await sendEmail(offer.driver?.email, subject, html)
+    if (offer.driver?.email && offer.driver.email_notifications_enabled !== false) {
+      const subject = `Reminder: you're driving ${requesterName} ${when}`
+      const html = `<p>This is a reminder that you're giving ${requesterName} a ride ${when}, ${request.shuttle_date} for the ${request.shuttle_time} shuttle.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
+      await sendEmail(offer.driver.email, subject, html)
+      sent += 1
+    }
 
     await supabaseAdmin.from('ride_offers').update({ last_reminder_sent: todayStr }).eq('id', offer.id)
-    sent += 1
   }
 
   return new Response(JSON.stringify({ ok: true, reminders_sent: sent }), {

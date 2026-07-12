@@ -20,8 +20,10 @@ export interface RideRequest {
   shuttle_date: string // YYYY-MM-DD
   shuttle_time: string // HH:MM
   status: RideRequestStatus
+  cancel_note: string | null
   created_at: string
   requester?: Profile
+  offers?: RideOffer[]
 }
 
 export interface RideOffer {
@@ -31,6 +33,7 @@ export interface RideOffer {
   status: RideOfferStatus
   calendar_added: boolean
   reminder_opt_in: boolean
+  cancel_note: string | null
   created_at: string
   responded_at: string | null
   ride_request?: RideRequest
@@ -44,6 +47,8 @@ export interface AppNotification {
   title: string
   body: string
   ride_request_id: string | null
+  related_user_id: string | null
   read: boolean
   created_at: string
+  related_user?: Profile
 }

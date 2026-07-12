@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell } from 'lucide-react'
+import { Bell, Mail } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import { fetchNotifications, markAllNotificationsRead, markNotificationRead } from '../lib/api'
 import { timeAgo } from '../lib/format'
@@ -104,7 +104,7 @@ export default function NotificationBell({ userId }: Props) {
       {open && (
         <div
           className="card"
-          style={{ position: 'absolute', right: 0, top: 40, width: 260, maxHeight: 320, overflowY: 'auto', padding: 6, zIndex: 10 }}
+          style={{ position: 'absolute', right: 0, top: 40, width: 280, maxHeight: 340, overflowY: 'auto', padding: 6, zIndex: 10 }}
         >
           {items.length === 0 ? (
             <p className="hint" style={{ padding: '10px 8px', margin: 0 }}>
@@ -125,6 +125,15 @@ export default function NotificationBell({ userId }: Props) {
               >
                 <p style={{ fontSize: 13, margin: 0 }}>{n.title}</p>
                 <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0' }}>{n.body}</p>
+                {n.related_user && (
+                  <a
+                    href={`mailto:${n.related_user.email}`}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-accent)', marginTop: 4 }}
+                  >
+                    <Mail size={11} /> Email {n.related_user.full_name.split(' ')[0]}
+                  </a>
+                )}
                 <p className="hint" style={{ margin: '4px 0 0' }}>
                   {timeAgo(n.created_at)}
                 </p>

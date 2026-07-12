@@ -51,6 +51,9 @@ async function sendEmail(to: string, subject: string, html: string) {
   }
 }
 
+// Placeholder for a real calendar free/busy check (see src/lib/calendar.ts for
+// the matching client-side note). Always "available" until Google Calendar
+// OAuth is wired up.
 async function isAvailable(_driverId: string, _date: string, _time: string): Promise<boolean> {
   return true
 }
@@ -158,7 +161,8 @@ Deno.serve(async (req) => {
         type: 'ride_requested',
         title: 'Ride requested',
         body: `${requesterName} is ${direction}, shuttle at ${rideRequest.shuttle_time} on ${rideRequest.shuttle_date}. ${guidance}`,
-        ride_request_id: rideRequest.id
+        ride_request_id: rideRequest.id,
+        related_user_id: rideRequest.requester_id
       })
 
       if (neighbor.email_notifications_enabled !== false) {

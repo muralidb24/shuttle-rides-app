@@ -68,13 +68,13 @@ export async function fetchPendingAsks(userId: string): Promise<RideOffer[]> {
 export async function fetchNotifications(userId: string): Promise<AppNotification[]> {
   const { data, error } = await supabase
     .from('notifications')
-    .select('*')
+    .select('*, related_user:profiles!notifications_related_user_id_fkey(*)')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(30)
 
   if (error) throw error
-  return (data ?? []) as AppNotification[]
+  return (data ?? []) as unknown as AppNotification[]
 }
 
 export async function markNotificationRead(id: string) {
