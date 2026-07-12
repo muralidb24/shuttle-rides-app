@@ -24,6 +24,28 @@ export async function updateCalendarIntegrated(userId: string, integrated: boole
   if (error) throw error
 }
 
+export async function connectCalendarFeed(userId: string, feedUrl: string): Promise<Profile> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ calendar_integrated: true, calendar_feed_url: feedUrl.trim() })
+    .eq('id', userId)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data as Profile
+}
+
+export async function disconnectCalendarFeed(userId: string): Promise<Profile> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ calendar_integrated: false, calendar_feed_url: null })
+    .eq('id', userId)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data as Profile
+}
+
 export async function updateEmailNotificationsEnabled(userId: string, enabled: boolean) {
   const { error } = await supabase.from('profiles').update({ email_notifications_enabled: enabled }).eq('id', userId)
   if (error) throw error

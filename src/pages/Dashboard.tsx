@@ -8,13 +8,13 @@ import {
   declineOffer,
   fetchCommittedRides,
   fetchPendingAsks,
-  fetchRequestedRides,
-  updateCalendarIntegrated
+  fetchRequestedRides
 } from '../lib/api'
 import { directionLabel, formatDate, formatTime, pickupGuidance } from '../lib/format'
 import RideCard from '../components/RideCard'
 import PendingAskCard from '../components/PendingAskCard'
 import CalendarPrompt from '../components/CalendarPrompt'
+import CalendarSyncDialog from '../components/CalendarSyncDialog'
 import ProfileMenu from '../components/ProfileMenu'
 import NotificationBell from '../components/NotificationBell'
 import CancelDialog from '../components/CancelDialog'
@@ -43,6 +43,7 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
   const [justAccepted, setJustAccepted] = useState<RideOffer | null>(null)
   const [tab, setTab] = useState<Tab>('committed')
   const [cancelTarget, setCancelTarget] = useState<CancelTarget | null>(null)
+  const [calendarDialogOpen, setCalendarDialogOpen] = useState(false)
 
   const refresh = useCallback(async () => {
     const [c, r, p] = await Promise.all([
@@ -111,12 +112,6 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
     await refresh()
   }
 
-  async function toggleCalendar() {
-    const next = !profile.calendar_integrated
-    await updateCalendarIntegrated(profile.id, next)
-    onProfileChange({ ...profile, calendar_integrated: next })
-  }
-
   return (
     <div style={{ padding: '1.5rem 1.25rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
@@ -128,7 +123,7 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
       </div>
       <button
         className="ghost"
-        onClick={toggleCalendar}
+        onClick={() => setCalendarDialogOpen(true)}
         style={{
           padding: 0,
           height: 'auto',
@@ -140,8 +135,16 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
           gap: 4
         }}
       >
-        <Calendar size={12} /> Calendar sync: {profile.calendar_integrated ? 'on' : 'off'}
+        <Calendar size={12} /> Calendar sync: {profile.calendar_integrated && profile.calendar_feed_url ? 'on' : 'off'}
       </button>
+
+      {calendarDialogOpen && (
+        <CalendarSyncDialog
+          profile={profile}
+          onClose={() => setCalendarDialogOpen(false)}
+          onProfileChange={onProfileChange}
+        />
+      )}
 
       <button
         className="primary"

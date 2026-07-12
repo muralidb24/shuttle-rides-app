@@ -9,6 +9,7 @@ export interface Profile {
   email: string
   full_name: string
   calendar_integrated: boolean
+  calendar_feed_url: string | null
   email_notifications_enabled: boolean
   created_at: string
 }
