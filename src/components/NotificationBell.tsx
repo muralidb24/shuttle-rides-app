@@ -43,10 +43,12 @@ export default function NotificationBell({ userId }: Props) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  // Opening the bell only reveals the list - it no longer marks everything
-  // read. Each alert is acknowledged individually (or all at once via the
-  // "Mark all read" action) so the badge count reflects what's actually been
-  // seen, not just what's been opened.
+  // Alerts are intentionally independent of the actions they describe -
+  // accepting a ride, adding it to your calendar, etc. don't auto-clear the
+  // notification that told you about it, since those are different pieces of
+  // state. The badge only clears when an alert is explicitly acknowledged
+  // (one at a time, or all at once) so it always reflects what's actually
+  // been read.
   function handleToggleOpen() {
     setOpen((v) => !v)
   }
@@ -133,7 +135,7 @@ export default function NotificationBell({ userId }: Props) {
                 marginBottom: 2
               }}
             >
-              <CheckCheck size={13} /> Mark all as read
+              <CheckCheck size={13} /> Acknowledge all
             </button>
           )}
           {items.length === 0 ? (
@@ -151,20 +153,7 @@ export default function NotificationBell({ userId }: Props) {
                   background: n.read ? 'transparent' : 'var(--bg-accent)'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
-                  <p style={{ fontSize: 13, margin: 0 }}>{n.title}</p>
-                  {!n.read && (
-                    <button
-                      className="ghost"
-                      onClick={() => handleAcknowledge(n)}
-                      aria-label="Acknowledge notification"
-                      title="Mark as read"
-                      style={{ padding: 2, height: 'auto', minWidth: 'auto', flexShrink: 0 }}
-                    >
-                      <Check size={14} />
-                    </button>
-                  )}
-                </div>
+                <p style={{ fontSize: 13, margin: 0 }}>{n.title}</p>
                 <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0' }}>{n.body}</p>
                 {n.related_user && (
                   <a
@@ -174,9 +163,28 @@ export default function NotificationBell({ userId }: Props) {
                     <Mail size={11} /> Email {n.related_user.full_name.split(' ')[0]}
                   </a>
                 )}
-                <p className="hint" style={{ margin: '4px 0 0' }}>
-                  {timeAgo(n.created_at)}
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                  <p className="hint" style={{ margin: 0 }}>
+                    {timeAgo(n.created_at)}
+                  </p>
+                  {!n.read && (
+                    <button
+                      onClick={() => handleAcknowledge(n)}
+                      style={{
+                        height: 'auto',
+                        padding: '3px 8px',
+                        fontSize: 11,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 3,
+                        background: 'var(--surface-2)',
+                        border: '0.5px solid var(--border-strong)'
+                      }}
+                    >
+                      <Check size={11} /> Acknowledge
+                    </button>
+                  )}
+                </div>
               </div>
             ))
           )}
