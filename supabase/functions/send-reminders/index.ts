@@ -26,21 +26,38 @@ const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 )
 
-async function sendEmail(to: string, subject: string, html: string) {
+interface EmailResult {
+  to: string
+  sent: boolean
+  error?: string
+}
+
+// Returns a result instead of swallowing failures - see notify-neighbors for
+// the same pattern and why it matters (a failed send used to be
+// indistinguishable from a successful one to anyone outside the function's
+// own console logs).
+async function sendEmail(to: string, subject: string, html: string): Promise<EmailResult> {
   if (!RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY not set - skipping email send to', to)
-    return
+    return { to, sent: false, error: 'RESEND_API_KEY is not set' }
   }
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html })
-  })
-  if (!res.ok) {
-    console.error('Resend error', await res.text())
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ from: FROM_EMAIL, to, subject, html })
+    })
+    if (!res.ok) {
+      const errText = await res.text()
+      console.error('Resend error', res.status, errText)
+      return { to, sent: false, error: `${res.status} ${errText}` }
+    }
+    return { to, sent: true }
+  } catch (err) {
+    console.error('Resend fetch failed', err)
+    return { to, sent: false, error: String(err) }
   }
 }
 
@@ -94,6 +111,7 @@ Deno.serve(async (req) => {
   }
 
   let sent = 0
+  const emailResults: EmailResult[] = []
 
   for (const offer of offers ?? []) {
     const request = offer.ride_request
@@ -108,22 +126,22 @@ Deno.serve(async (req) => {
 
     if (request.requester?.email && request.requester.email_notifications_enabled !== false) {
       const subject = `Reminder: your ride ${when}`
-      const html = `<p>This is a reminder that ${driverName} is giving you a ride ${when}, ${request.shuttle_date} for the ${request.shuttle_time} shuttle.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
-      await sendEmail(request.requester.email, subject, html)
+      const html = `<p>This is to remind you that ${driverName} has committed to give you a ride ${when}, for the ${request.shuttle_time} shuttle on ${request.shuttle_date}.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
+      emailResults.push(await sendEmail(request.requester.email, subject, html))
       sent += 1
     }
 
     if (offer.driver?.email && offer.driver.email_notifications_enabled !== false) {
       const subject = `Reminder: you're giving ${requesterName} a ride ${when}`
-      const html = `<p>This is a reminder that you're giving ${requesterName} a ride ${when}, ${request.shuttle_date} for the ${request.shuttle_time} shuttle.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
-      await sendEmail(offer.driver.email, subject, html)
+      const html = `<p>This is to remind you that you've committed to give ${requesterName} a ride ${when}, for the ${request.shuttle_time} shuttle on ${request.shuttle_date}.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
+      emailResults.push(await sendEmail(offer.driver.email, subject, html))
       sent += 1
     }
 
     await supabaseAdmin.from('ride_offers').update({ last_reminder_sent: todayStr }).eq('id', offer.id)
   }
 
-  return new Response(JSON.stringify({ ok: true, reminders_sent: sent }), {
+  return new Response(JSON.stringify({ ok: true, reminders_sent: sent, from_email: FROM_EMAIL, email_results: emailResults }), {
     headers: { 'Content-Type': 'application/json' }
   })
 })

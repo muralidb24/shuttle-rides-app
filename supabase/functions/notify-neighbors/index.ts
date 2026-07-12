@@ -33,21 +33,40 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 }
 
-async function sendEmail(to: string, subject: string, html: string) {
+interface EmailResult {
+  to: string
+  sent: boolean
+  error?: string
+}
+
+// Returns a result object instead of swallowing failures - a failed Resend
+// call used to only show up in console.error, which meant a silently
+// undelivered email looked identical to a delivered one from the caller's
+// perspective (and from the app's perspective, since the client never sees
+// this function's internals). Surfacing it in the response makes it
+// possible to actually diagnose "the email never arrived" reports.
+async function sendEmail(to: string, subject: string, html: string): Promise<EmailResult> {
   if (!RESEND_API_KEY) {
-    console.warn('RESEND_API_KEY not set - skipping email send to', to)
-    return
+    return { to, sent: false, error: 'RESEND_API_KEY is not set' }
   }
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html })
-  })
-  if (!res.ok) {
-    console.error('Resend error', await res.text())
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ from: FROM_EMAIL, to, subject, html })
+    })
+    if (!res.ok) {
+      const errText = await res.text()
+      console.error('Resend error', res.status, errText)
+      return { to, sent: false, error: `${res.status} ${errText}` }
+    }
+    return { to, sent: true }
+  } catch (err) {
+    console.error('Resend fetch failed', err)
+    return { to, sent: false, error: String(err) }
   }
 }
 
@@ -68,9 +87,10 @@ function subtractMinutes(time: string, minutes: number): string {
 }
 
 // The shuttle is a fixed ~10 minute drive away and always leaves on the hour
-// or half hour, so a driver picking someone up to catch it should leave home
-// about 15 minutes before the shuttle time (10 min drive + 5 min buffer).
-// Returning is simpler - just be at the stop when the shuttle arrives.
+// or half hour, so a ride giver picking someone up to catch it should leave
+// home about 15 minutes before the shuttle time (10 min drive + 5 min
+// buffer). Returning is simpler - just be at the stop when the shuttle
+// arrives.
 function pickupGuidance(direction: string, shuttleTime: string): string {
   if (direction === 'to_shuttle') {
     const pickup = subtractMinutes(shuttleTime, 15)
@@ -123,6 +143,7 @@ Deno.serve(async (req) => {
     const guidance = pickupGuidance(rideRequest.direction, rideRequest.shuttle_time)
 
     let asked = 0
+    const emailResults: EmailResult[] = []
 
     for (const neighbor of neighbors ?? []) {
       const available = neighbor.calendar_integrated
@@ -166,13 +187,16 @@ Deno.serve(async (req) => {
       })
 
       if (neighbor.email_notifications_enabled !== false) {
-        await sendEmail(neighbor.email, subject, body)
+        emailResults.push(await sendEmail(neighbor.email, subject, body))
+      } else {
+        emailResults.push({ to: neighbor.email, sent: false, error: 'opted out of email notifications' })
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, neighbors_asked: asked }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    return new Response(
+      JSON.stringify({ ok: true, neighbors_asked: asked, from_email: FROM_EMAIL, email_results: emailResults }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   } catch (err) {
     console.error(err)
     return new Response(JSON.stringify({ error: String(err) }), {
