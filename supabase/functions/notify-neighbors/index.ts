@@ -318,6 +318,39 @@ async function checkCalendarAvailability(
   }
 }
 
+// A neighbor who has already committed to give another ride can't reasonably
+// be asked to give this one too if the two are too close together - treat
+// them as unavailable for two hours around any ride they've already
+// accepted. This is independent of (and checked in addition to) external
+// calendar sync, since it's the app's own data and applies to every
+// neighbor, synced or not.
+const COMMITTED_RIDE_BUFFER_MS = 2 * 60 * 60 * 1000
+
+function toUtcMillis(dateStr: string, timeStr: string, timeZone: string): number {
+  const [y, mo, d] = dateStr.split('-').map(Number)
+  const [h, mi] = timeStr.split(':').map(Number)
+  return zonedTimeToUtc(y, mo, d, h, mi, 0, timeZone).getTime()
+}
+
+async function hasCommittedRideConflict(driverId: string, shuttleDate: string, shuttleTime: string): Promise<boolean> {
+  const target = toUtcMillis(shuttleDate, shuttleTime, ICS_TIMEZONE)
+  const { data, error } = await supabaseAdmin
+    .from('ride_offers')
+    .select('ride_request:ride_requests(shuttle_date, shuttle_time)')
+    .eq('driver_id', driverId)
+    .eq('status', 'accepted')
+
+  if (error || !data) return false
+
+  for (const row of data as unknown as Array<{ ride_request: { shuttle_date: string; shuttle_time: string } | null }>) {
+    const committed = row.ride_request
+    if (!committed) continue
+    const committedTime = toUtcMillis(committed.shuttle_date, committed.shuttle_time, ICS_TIMEZONE)
+    if (Math.abs(committedTime - target) < COMMITTED_RIDE_BUFFER_MS) return true
+  }
+  return false
+}
+
 function subtractMinutes(time: string, minutes: number): string {
   const [h, m] = time.split(':').map(Number)
   const total = h * 60 + m - minutes
@@ -389,6 +422,9 @@ Deno.serve(async (req) => {
 
     for (const neighbor of neighbors ?? []) {
       let available = true
+      let checked = false
+      let checkError: string | undefined
+
       if (neighbor.calendar_integrated && neighbor.calendar_feed_url) {
         const result = await checkCalendarAvailability(
           neighbor.calendar_feed_url,
@@ -397,7 +433,23 @@ Deno.serve(async (req) => {
           rideRequest.shuttle_time
         )
         available = result.available
-        availabilityChecks.push({ to: neighbor.email, checked: result.checked, available, error: result.error })
+        checked = result.checked
+        checkError = result.error
+      }
+
+      // Checked regardless of calendar sync - this uses the app's own data,
+      // not an external feed.
+      if (available) {
+        const conflict = await hasCommittedRideConflict(neighbor.id, rideRequest.shuttle_date, rideRequest.shuttle_time)
+        if (conflict) {
+          available = false
+          checked = true
+          checkError = 'already committed to another ride within 2 hours'
+        }
+      }
+
+      if (neighbor.calendar_integrated || checked) {
+        availabilityChecks.push({ to: neighbor.email, checked, available, error: checkError })
       }
 
       const { data: offer, error: offerError } = await supabaseAdmin
