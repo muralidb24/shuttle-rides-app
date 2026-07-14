@@ -1,16 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
-import { UserRound, BookOpen, MessageCircle, LogOut, Mail } from 'lucide-react'
+import { UserRound, BookOpen, MessageCircle, LogOut, Mail, Users } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import { updateEmailNotificationsEnabled } from '../lib/api'
-import type { Profile } from '../types'
+import AudienceSettingsDialog from './AudienceSettingsDialog'
+import type { Profile, RequestAudienceMode } from '../types'
 
 interface Props {
   profile: Profile
   onProfileChange: (profile: Profile) => void
 }
 
+const AUDIENCE_MODE_LABELS: Record<RequestAudienceMode, string> = {
+  everyone: 'everyone',
+  all_except: 'custom (excluding some)',
+  only: 'custom (selected only)'
+}
+
 export default function ProfileMenu({ profile, onProfileChange }: Props) {
   const [open, setOpen] = useState(false)
+  const [audienceDialogOpen, setAudienceDialogOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -79,10 +87,27 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
           <button className="menu-item" onClick={toggleEmail}>
             <Mail size={16} /> Email notifications: {profile.email_notifications_enabled ? 'on' : 'off'}
           </button>
+          <button
+            className="menu-item"
+            onClick={() => {
+              setAudienceDialogOpen(true)
+              setOpen(false)
+            }}
+          >
+            <Users size={16} /> Who sees my requests: {AUDIENCE_MODE_LABELS[profile.request_audience_mode]}
+          </button>
           <button className="menu-item" onClick={() => supabase.auth.signOut()}>
             <LogOut size={16} /> Sign out
           </button>
         </div>
+      )}
+
+      {audienceDialogOpen && (
+        <AudienceSettingsDialog
+          profile={profile}
+          onClose={() => setAudienceDialogOpen(false)}
+          onProfileChange={onProfileChange}
+        />
       )}
     </div>
   )

@@ -416,11 +416,39 @@ Deno.serve(async (req) => {
     const requesterName = rideRequest.requester?.full_name ?? 'A neighbor'
     const guidance = pickupGuidance(rideRequest.direction, rideRequest.shuttle_time)
 
+    // Audience control: a requester can restrict which neighbors their own
+    // requests go to (everyone / everyone except some / only some), set
+    // once as a persistent profile preference rather than chosen per
+    // request. This is a hard gate applied before calendar/committed-ride
+    // availability - an excluded neighbor never gets an offer row at all,
+    // same as if they didn't exist in the community. On a lookup failure,
+    // fail open to "everyone" (same philosophy as the calendar checks
+    // below) rather than silently asking no one.
+    const audienceMode = rideRequest.requester?.request_audience_mode ?? 'everyone'
+    let neighborPool = neighbors ?? []
+
+    if (audienceMode !== 'everyone') {
+      const { data: audienceRows, error: audienceError } = await supabaseAdmin
+        .from('request_audience_members')
+        .select('member_id')
+        .eq('requester_id', rideRequest.requester_id)
+
+      if (audienceError) {
+        console.error('failed to load audience selections, defaulting to everyone', audienceError)
+      } else {
+        const memberIds = new Set((audienceRows ?? []).map((r) => r.member_id as string))
+        neighborPool =
+          audienceMode === 'only'
+            ? neighborPool.filter((n) => memberIds.has(n.id))
+            : neighborPool.filter((n) => !memberIds.has(n.id))
+      }
+    }
+
     let asked = 0
     const emailResults: EmailResult[] = []
     const availabilityChecks: Array<{ to: string; checked: boolean; available: boolean; error?: string }> = []
 
-    for (const neighbor of neighbors ?? []) {
+    for (const neighbor of neighborPool) {
       let available = true
       let checked = false
       let checkError: string | undefined

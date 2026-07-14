@@ -1,5 +1,5 @@
 import { supabase } from '../supabaseClient'
-import type { AppNotification, Direction, Profile, RideOffer, RideRequest } from '../types'
+import type { AppNotification, Direction, Profile, RequestAudienceMode, RideOffer, RideRequest } from '../types'
 import type { User } from '@supabase/supabase-js'
 
 export async function getProfile(userId: string): Promise<Profile | null> {
@@ -49,6 +49,51 @@ export async function disconnectCalendarFeed(userId: string): Promise<Profile> {
 export async function updateEmailNotificationsEnabled(userId: string, enabled: boolean) {
   const { error } = await supabase.from('profiles').update({ email_notifications_enabled: enabled }).eq('id', userId)
   if (error) throw error
+}
+
+// Every other signed-in neighbor, for the audience-selection checklist.
+export async function fetchAllProfiles(excludeUserId: string): Promise<Profile[]> {
+  const { data, error } = await supabase.from('profiles').select('*').neq('id', excludeUserId).order('full_name')
+  if (error) throw error
+  return (data ?? []) as Profile[]
+}
+
+export async function fetchAudienceMemberIds(userId: string): Promise<string[]> {
+  const { data, error } = await supabase.from('request_audience_members').select('member_id').eq('requester_id', userId)
+  if (error) throw error
+  return (data ?? []).map((row) => row.member_id as string)
+}
+
+// Replaces the requester's audience mode + selected-member list in one call.
+// Not wrapped in a single DB transaction - these rows are only ever read by
+// this same user's own future ride requests, so a brief window between the
+// delete and the re-insert isn't a correctness or privacy issue, just a
+// moment where a request created in that exact instant would fall back to
+// the old selection.
+export async function updateRequestAudienceSettings(
+  userId: string,
+  mode: RequestAudienceMode,
+  memberIds: string[]
+): Promise<Profile> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ request_audience_mode: mode })
+    .eq('id', userId)
+    .select('*')
+    .single()
+  if (error) throw error
+
+  const { error: deleteError } = await supabase.from('request_audience_members').delete().eq('requester_id', userId)
+  if (deleteError) throw deleteError
+
+  if (memberIds.length > 0) {
+    const { error: insertError } = await supabase
+      .from('request_audience_members')
+      .insert(memberIds.map((memberId) => ({ requester_id: userId, member_id: memberId })))
+    if (insertError) throw insertError
+  }
+
+  return data as Profile
 }
 
 export async function fetchCommittedRides(userId: string): Promise<RideOffer[]> {
