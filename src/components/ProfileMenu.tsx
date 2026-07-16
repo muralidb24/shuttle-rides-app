@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { UserRound, BookOpen, MessageCircle, LogOut, Mail, Users } from 'lucide-react'
+import { UserRound, BookOpen, MessageCircle, LogOut, Mail, Users, Settings } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import { updateEmailNotificationsEnabled } from '../lib/api'
+import { clearPushToken } from '../lib/push'
 import AudienceSettingsDialog from './AudienceSettingsDialog'
+import CommunitySettingsDialog from './CommunitySettingsDialog'
 import type { Profile, RequestAudienceMode } from '../types'
 
 interface Props {
@@ -19,6 +21,7 @@ const AUDIENCE_MODE_LABELS: Record<RequestAudienceMode, string> = {
 export default function ProfileMenu({ profile, onProfileChange }: Props) {
   const [open, setOpen] = useState(false)
   const [audienceDialogOpen, setAudienceDialogOpen] = useState(false)
+  const [communityDialogOpen, setCommunityDialogOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -96,7 +99,23 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
           >
             <Users size={16} /> Who sees my requests: {AUDIENCE_MODE_LABELS[profile.request_audience_mode]}
           </button>
-          <button className="menu-item" onClick={() => supabase.auth.signOut()}>
+          {profile.role === 'admin' && (
+            <button
+              className="menu-item"
+              onClick={() => {
+                setCommunityDialogOpen(true)
+                setOpen(false)
+              }}
+            >
+              <Settings size={16} /> Community settings
+            </button>
+          )}
+          <button
+            className="menu-item"
+            onClick={() => {
+              clearPushToken().finally(() => supabase.auth.signOut())
+            }}
+          >
             <LogOut size={16} /> Sign out
           </button>
         </div>
@@ -109,6 +128,8 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
           onProfileChange={onProfileChange}
         />
       )}
+
+      {communityDialogOpen && <CommunitySettingsDialog profile={profile} onClose={() => setCommunityDialogOpen(false)} />}
     </div>
   )
 }

@@ -1,6 +1,5 @@
 import { supabase } from '../supabaseClient'
-import type { AppNotification, Direction, Profile, RequestAudienceMode, RideOffer, RideRequest } from '../types'
-import type { User } from '@supabase/supabase-js'
+import type { AppNotification, Community, Direction, MemberRole, Profile, RequestAudienceMode, RideOffer, RideRequest } from '../types'
 
 export async function getProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
@@ -8,15 +7,71 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   return (data as Profile) ?? null
 }
 
-export async function createProfile(user: User, fullName: string): Promise<Profile> {
+// --- Community onboarding -------------------------------------------------
+// Profile creation exclusively goes through these two RPCs (there's no
+// direct client insert policy on profiles or communities) - each one
+// resolves/creates the community server-side and inserts the caller's own
+// profile row with the correct role in a single trusted operation, so a
+// client can never self-assign role='admin' or an arbitrary community_id.
+
+export async function lookupCommunityByCode(code: string): Promise<{ id: string; name: string } | null> {
+  const { data, error } = await supabase.rpc('lookup_community_by_code', { p_code: code.trim() })
+  if (error) throw error
+  const row = Array.isArray(data) ? data[0] : data
+  return row ?? null
+}
+
+export async function joinCommunity(joinCode: string, fullName: string): Promise<Profile> {
+  const { data, error } = await supabase.rpc('join_community', {
+    p_join_code: joinCode.trim(),
+    p_full_name: fullName.trim()
+  })
+  if (error) throw error
+  const row = Array.isArray(data) ? data[0] : data
+  return row as Profile
+}
+
+export async function createCommunityAndJoin(name: string, joinCode: string, fullName: string): Promise<Profile> {
+  const { data, error } = await supabase.rpc('create_community_and_join', {
+    p_name: name.trim(),
+    p_join_code: joinCode.trim(),
+    p_full_name: fullName.trim()
+  })
+  if (error) throw error
+  const row = Array.isArray(data) ? data[0] : data
+  return row as Profile
+}
+
+// --- Community admin settings ----------------------------------------------
+
+export async function fetchCommunity(communityId: string): Promise<Community> {
+  const { data, error } = await supabase.from('communities').select('*').eq('id', communityId).single()
+  if (error) throw error
+  return data as Community
+}
+
+export async function updateCommunity(communityId: string, updates: { name: string; join_code: string }): Promise<Community> {
   const { data, error } = await supabase
-    .from('profiles')
-    .insert({ id: user.id, email: user.email, full_name: fullName.trim() })
+    .from('communities')
+    .update(updates)
+    .eq('id', communityId)
     .select('*')
     .single()
-
   if (error) throw error
-  return data as Profile
+  return data as Community
+}
+
+// RLS already scopes this to the caller's own community, so no explicit
+// filter is needed here - it just returns everyone in it, self included.
+export async function fetchCommunityMembers(): Promise<Profile[]> {
+  const { data, error } = await supabase.from('profiles').select('*').order('full_name')
+  if (error) throw error
+  return (data ?? []) as Profile[]
+}
+
+export async function setMemberRole(memberId: string, role: MemberRole) {
+  const { error } = await supabase.rpc('set_member_role', { p_member_id: memberId, p_role: role })
+  if (error) throw error
 }
 
 export async function updateCalendarIntegrated(userId: string, integrated: boolean) {
@@ -48,6 +103,27 @@ export async function disconnectCalendarFeed(userId: string): Promise<Profile> {
 
 export async function updateEmailNotificationsEnabled(userId: string, enabled: boolean) {
   const { error } = await supabase.from('profiles').update({ email_notifications_enabled: enabled }).eq('id', userId)
+  if (error) throw error
+}
+
+// Registers (or re-registers) this device's push token against the signed-in
+// user. `token` is globally unique (one row per device install), so this is
+// an upsert on conflict(token) rather than a plain insert - covers the app
+// being reinstalled or a device changing hands between community members.
+export async function registerPushToken(userId: string, token: string, platform: 'ios' | 'android') {
+  const { error } = await supabase
+    .from('push_tokens')
+    .upsert(
+      { user_id: userId, token, platform, updated_at: new Date().toISOString() },
+      { onConflict: 'token' }
+    )
+  if (error) throw error
+}
+
+// Called on sign-out so a shared/reset device stops receiving another
+// person's push notifications.
+export async function unregisterPushToken(token: string) {
+  const { error } = await supabase.from('push_tokens').delete().eq('token', token)
   if (error) throw error
 }
 

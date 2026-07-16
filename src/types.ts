@@ -4,6 +4,15 @@ export type RideRequestStatus = 'open' | 'matched' | 'cancelled'
 export type RideOfferStatus = 'pending' | 'accepted' | 'declined' | 'cancelled'
 export type NotificationType = 'ride_requested' | 'ride_accepted' | 'ride_declined' | 'ride_cancelled'
 export type RequestAudienceMode = 'everyone' | 'all_except' | 'only'
+export type MemberRole = 'member' | 'admin'
+
+export interface Community {
+  id: string
+  name: string
+  join_code: string
+  created_by: string | null
+  created_at: string
+}
 
 export interface Profile {
   id: string
@@ -13,6 +22,8 @@ export interface Profile {
   calendar_feed_url: string | null
   email_notifications_enabled: boolean
   request_audience_mode: RequestAudienceMode
+  community_id: string
+  role: MemberRole
   created_at: string
 }
 

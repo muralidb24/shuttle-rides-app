@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabaseClient'
-import { getProfile, createProfile } from './lib/api'
+import { getProfile } from './lib/api'
+import { initPushNotifications } from './lib/push'
 import type { Profile } from './types'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import RequestRide from './pages/RequestRide'
-import WelcomeName from './pages/WelcomeName'
+import CommunityOnboarding from './pages/CommunityOnboarding'
 
 type View = 'dashboard' | 'request'
 
@@ -43,19 +44,18 @@ export default function App() {
     })
   }, [session])
 
+  useEffect(() => {
+    if (profile) {
+      initPushNotifications(profile.id)
+    }
+  }, [profile?.id])
+
   if (loading) return null
   if (!session) return <Login />
   if (!profileChecked) return null
 
   if (!profile) {
-    return (
-      <WelcomeName
-        onSubmit={async (name) => {
-          const created = await createProfile(session.user, name)
-          setProfile(created)
-        }}
-      />
-    )
+    return <CommunityOnboarding onDone={(created) => setProfile(created)} />
   }
 
   if (view === 'request') {

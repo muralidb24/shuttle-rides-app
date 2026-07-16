@@ -400,9 +400,23 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Every profile belongs to exactly one community, and requests must
+    // never fan out across communities - unlike the availability checks
+    // below (which fail OPEN on error, since worst case is asking someone
+    // who's busy), this fails CLOSED: if the requester somehow has no
+    // community_id, that's a data integrity problem, not something to
+    // paper over by silently asking the entire user base.
+    if (!rideRequest.requester?.community_id) {
+      return new Response(JSON.stringify({ error: 'requester has no community_id' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     const { data: neighbors, error: neighborsError } = await supabaseAdmin
       .from('profiles')
       .select('*')
+      .eq('community_id', rideRequest.requester.community_id)
       .neq('id', rideRequest.requester_id)
 
     if (neighborsError) {

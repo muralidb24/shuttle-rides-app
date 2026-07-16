@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "387985779931",
+    "project_id": "monatageride",
+    "storage_bucket": "monatageride.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:387985779931:android:117961b6c400f03b79f0fe",
+        "android_client_info": {
+          "package_name": "com.postalcolony.shuttlerides"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuGUdi0SkOT7E0ss03vlkWdwHIWyTddOs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

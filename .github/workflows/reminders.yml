@@ -2,15 +2,18 @@ name: Send ride reminders
 
 on:
   schedule:
-    # Two runs a day, ~6 hours apart. GitHub's scheduled triggers are
-    # best-effort and occasionally run late or get skipped entirely during
-    # high load on shared runners (this has happened in practice - one day's
-    # 13:00 UTC run silently never fired). The function is idempotent per day
-    # (it checks last_reminder_sent before sending), so a second run only
-    # ever costs a no-op on days the first one worked - it never double-sends.
-    # Adjust both to land in the morning/evening in your timezone.
-    - cron: '0 13 * * *'
-    - cron: '0 19 * * *'
+    # Two runs a day - 6 AM and 1 PM Eastern (currently EDT, UTC-4; these
+    # fixed UTC times will drift by an hour relative to Eastern across the
+    # DST boundary - adjust if that matters to you). GitHub's scheduled
+    # triggers are best-effort and occasionally run late or get skipped
+    # entirely during high load on shared runners (this has happened in
+    # practice). The function is idempotent per day (it checks
+    # last_reminder_sent before sending), so a second run only ever costs a
+    # no-op on days the first one worked - it never double-sends. This is
+    # also why the pg_cron backup in supabase/migrations exists - it fires
+    # on the exact same schedule but isn't subject to GitHub's delays.
+    - cron: '0 10 * * *'
+    - cron: '0 17 * * *'
   workflow_dispatch:
 
 jobs:
