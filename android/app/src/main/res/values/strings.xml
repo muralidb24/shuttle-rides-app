@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Shuttle Rides</string>
-    <string name="title_activity_main">Neighborhood Shuttle Rides</string>
+    <string name="app_name">Ride, please!</string>
+    <string name="title_activity_main">Ride, please!</string>
     <string name="package_name">com.postalcolony.shuttlerides</string>
     <string name="custom_url_scheme">com.postalcolony.shuttlerides</string>
 </resources>
