@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy - Neighborhood shuttle rides</title>
+    <style>
+      :root {
+        --text-primary: #1c1c1a;
+        --text-secondary: #5f5e5a;
+        --border: #ddd9d0;
+        --bg-accent: #e6f1fb;
+        --text-accent: #185fa5;
+        --surface: #ffffff;
+        --page-bg: #f5f4f0;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --text-primary: #f2f1ec;
+          --text-secondary: #b5b3aa;
+          --border: #38383d;
+          --bg-accent: #0c447c;
+          --text-accent: #b5d4f4;
+          --surface: #26262b;
+          --page-bg: #17171a;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--page-bg);
+        color: var(--text-primary);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+      }
+      .wrap { max-width: 640px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+      h1 { font-size: 22px; font-weight: 500; margin: 0 0 4px; }
+      .subtitle { color: var(--text-secondary); font-size: 14px; margin: 0 0 28px; }
+      h2 { font-size: 16px; font-weight: 500; margin: 28px 0 8px; }
+      p, li { font-size: 14px; color: var(--text-secondary); margin: 0 0 8px; }
+      ul { padding-left: 20px; margin: 0 0 8px; }
+      .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+      a { color: var(--text-accent); }
+      .back { display: inline-block; margin-top: 24px; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Privacy Policy</h1>
+      <p class="subtitle">Neighborhood shuttle rides &mdash; last updated July 2026</p>
+
+      <div class="card">
+        <h2>What this app is</h2>
+        <p>Neighborhood shuttle rides (also shown as "Ride, please!") is a private, invite-only app used by members of a single residential community to coordinate rides to and from a local airport shuttle stop. It is not a public or commercial service, and it is not available to the general public &mdash; access requires a community join code shared by an existing member.</p>
+      </div>
+
+      <div class="card">
+        <h2>Information we collect</h2>
+        <ul>
+          <li><strong>Account information:</strong> your email address and the name you provide when you sign in.</li>
+          <li><strong>Community information:</strong> which community you belong to, and your role within it (member or admin).</li>
+          <li><strong>Ride information:</strong> the ride requests you create or offer to fulfill, including the date, time, and direction of travel (to or from the shuttle stop).</li>
+          <li><strong>Calendar information (optional):</strong> if you choose to connect a calendar feed URL, we use it only to check your availability when a neighbor requests a ride. We do not store the contents of your calendar beyond checking busy/free times at the moment a request is made.</li>
+          <li><strong>Push notification token (optional):</strong> if you're using the app on iOS or Android and allow notifications, a device token is stored so we can deliver ride-related alerts to your device.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>How we use this information</h2>
+        <p>We use this information solely to operate the app's core function: matching ride requests with neighbors willing to help, and notifying the relevant people by email and push notification. Your name and contact details are shared only with fellow members of your own community, and only as needed to coordinate a specific ride (for example, showing a driver's name to the person they're picking up).</p>
+      </div>
+
+      <div class="card">
+        <h2>What we don't do</h2>
+        <p>We do not sell or rent your information to anyone. We do not use your information for advertising, and the app contains no ads or third-party ad trackers. We do not use analytics services that track you across other apps or websites.</p>
+      </div>
+
+      <div class="card">
+        <h2>Third-party services we rely on</h2>
+        <p>To operate the app, we use a small number of infrastructure providers who process data on our behalf, strictly to deliver the app's functionality:</p>
+        <ul>
+          <li><strong>Supabase</strong> &mdash; hosts our database and handles sign-in (magic-link email authentication, so no password is ever stored).</li>
+          <li><strong>Resend</strong> &mdash; delivers transactional emails (ride notifications, reminders, sign-in links).</li>
+          <li><strong>Firebase Cloud Messaging</strong> &mdash; delivers push notifications to the iOS and Android apps.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Data retention and deletion</h2>
+        <p>Ride requests are automatically removed roughly an hour after the scheduled shuttle time. If you'd like your account and associated data deleted entirely, contact us using the information below and we'll remove it.</p>
+      </div>
+
+      <div class="card">
+        <h2>Children</h2>
+        <p>This app is intended for adult members of a residential community coordinating transportation, and is not directed at children.</p>
+      </div>
+
+      <div class="card">
+        <h2>Contact</h2>
+        <p>Questions about this policy or your data can be sent to the community administrator via the feedback link inside the app.</p>
+      </div>
+
+      <a class="back" href="./">&larr; Back to the app</a>
+    </div>
+  </body>
+</html>
