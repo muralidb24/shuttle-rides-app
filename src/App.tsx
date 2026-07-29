@@ -62,6 +62,7 @@ export default function App() {
     return (
       <RequestRide
         userId={profile.id}
+        defaultDestinationId={profile.default_destination_id}
         onCreated={() => setView('dashboard')}
         onCancel={() => setView('dashboard')}
       />

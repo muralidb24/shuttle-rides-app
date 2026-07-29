@@ -14,6 +14,13 @@ export interface Community {
   created_at: string
 }
 
+export interface Destination {
+  id: string
+  community_id: string
+  name: string
+  created_at: string
+}
+
 export interface Profile {
   id: string
   email: string
@@ -24,6 +31,7 @@ export interface Profile {
   request_audience_mode: RequestAudienceMode
   community_id: string
   role: MemberRole
+  default_destination_id: string | null
   created_at: string
 }
 
@@ -33,11 +41,13 @@ export interface RideRequest {
   direction: Direction
   shuttle_date: string // YYYY-MM-DD
   shuttle_time: string // HH:MM
+  destination_id: string
   status: RideRequestStatus
   cancel_note: string | null
   created_at: string
   requester?: Profile
   offers?: RideOffer[]
+  destination?: Destination
 }
 
 export interface RideOffer {

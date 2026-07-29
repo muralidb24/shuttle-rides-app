@@ -22,6 +22,7 @@ export interface CalendarEventInput {
   date: string // YYYY-MM-DD
   time: string // HH:MM or HH:MM:SS (Postgres `time` columns come back with seconds)
   durationMinutes?: number
+  location?: string
 }
 
 function toDateTime(date: string, time: string): Date {
@@ -48,6 +49,7 @@ export function googleCalendarLink(input: CalendarEventInput): string {
     details: input.description,
     dates: `${formatGoogleDate(start)}/${formatGoogleDate(end)}`
   })
+  if (input.location) params.set('location', input.location)
   return `https://calendar.google.com/calendar/render?${params.toString()}`
 }
 
@@ -65,6 +67,7 @@ export function icsDownloadUrl(input: CalendarEventInput): string {
     `DTEND:${formatGoogleDate(end)}`,
     `SUMMARY:${input.title}`,
     `DESCRIPTION:${input.description}`,
+    ...(input.location ? [`LOCATION:${input.location}`] : []),
     'END:VEVENT',
     'END:VCALENDAR'
   ].join('\r\n')

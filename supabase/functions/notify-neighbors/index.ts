@@ -389,7 +389,7 @@ Deno.serve(async (req) => {
 
     const { data: rideRequest, error: rrError } = await supabaseAdmin
       .from('ride_requests')
-      .select('*, requester:profiles!ride_requests_requester_id_fkey(*)')
+      .select('*, requester:profiles!ride_requests_requester_id_fkey(*), destination:destinations(name)')
       .eq('id', ride_request_id)
       .single()
 
@@ -429,6 +429,8 @@ Deno.serve(async (req) => {
     const direction = rideRequest.direction === 'to_shuttle' ? 'traveling out' : 'returning home'
     const requesterName = rideRequest.requester?.full_name ?? 'A neighbor'
     const guidance = pickupGuidance(rideRequest.direction, rideRequest.shuttle_time)
+    const destinationName = (rideRequest.destination as { name: string } | null)?.name
+    const destinationSuffix = destinationName ? ` to/from ${destinationName}` : ''
 
     // Audience control: a requester can restrict which neighbors their own
     // requests go to (everyone / everyone except some / only some), set
@@ -516,7 +518,7 @@ Deno.serve(async (req) => {
 
       asked += 1
       const subject = `Ride requested: ${requesterName} is ${direction}`
-      const intro = `<p>${requesterName} is ${direction} and needs a ride for the ${rideRequest.shuttle_date} shuttle at ${rideRequest.shuttle_time}.</p><p>${guidance}</p>`
+      const intro = `<p>${requesterName} is ${direction}${destinationSuffix} and needs a ride for the ${rideRequest.shuttle_date} shuttle at ${rideRequest.shuttle_time}.</p><p>${guidance}</p>`
       const body = neighbor.calendar_integrated
         ? `${intro}<p>You're free at that time. <a href="${APP_URL}">Open the app</a> to offer to give this ride.</p>`
         : `${intro}<p>Are you available and willing to give this ride? <a href="${APP_URL}">Open the app</a> to respond.</p>`
@@ -525,7 +527,7 @@ Deno.serve(async (req) => {
         user_id: neighbor.id,
         type: 'ride_requested',
         title: 'Ride requested',
-        body: `${requesterName} is ${direction}, shuttle at ${rideRequest.shuttle_time} on ${rideRequest.shuttle_date}. ${guidance}`,
+        body: `${requesterName} is ${direction}${destinationSuffix}, shuttle at ${rideRequest.shuttle_time} on ${rideRequest.shuttle_date}. ${guidance}`,
         ride_request_id: rideRequest.id,
         related_user_id: rideRequest.requester_id
       })

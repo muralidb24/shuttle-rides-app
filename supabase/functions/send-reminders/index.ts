@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
   const { data: offers, error } = await supabaseAdmin
     .from('ride_offers')
     .select(
-      '*, ride_request:ride_requests(*, requester:profiles!ride_requests_requester_id_fkey(*)), driver:profiles!ride_offers_driver_id_fkey(*)'
+      '*, ride_request:ride_requests(*, requester:profiles!ride_requests_requester_id_fkey(*), destination:destinations(name)), driver:profiles!ride_offers_driver_id_fkey(*)'
     )
     .eq('status', 'accepted')
 
@@ -123,17 +123,19 @@ Deno.serve(async (req) => {
     const requesterName = request.requester?.full_name ?? 'your neighbor'
     const driverName = offer.driver?.full_name ?? 'your ride giver'
     const guidance = pickupGuidance(request.direction, request.shuttle_time)
+    const destinationName = (request.destination as { name: string } | null)?.name
+    const destinationSuffix = destinationName ? ` to/from ${destinationName}` : ''
 
     if (request.requester?.email && request.requester.email_notifications_enabled !== false) {
       const subject = `Reminder: your ride ${when}`
-      const html = `<p>This is to remind you that ${driverName} has committed to give you a ride ${when}, for the ${request.shuttle_time} shuttle on ${request.shuttle_date}.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
+      const html = `<p>This is to remind you that ${driverName} has committed to give you a ride ${when}${destinationSuffix}, for the ${request.shuttle_time} shuttle on ${request.shuttle_date}.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
       emailResults.push(await sendEmail(request.requester.email, subject, html))
       sent += 1
     }
 
     if (offer.driver?.email && offer.driver.email_notifications_enabled !== false) {
       const subject = `Reminder: you're giving ${requesterName} a ride ${when}`
-      const html = `<p>This is to remind you that you've committed to give ${requesterName} a ride ${when}, for the ${request.shuttle_time} shuttle on ${request.shuttle_date}.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
+      const html = `<p>This is to remind you that you've committed to give ${requesterName} a ride ${when}${destinationSuffix}, for the ${request.shuttle_time} shuttle on ${request.shuttle_date}.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
       emailResults.push(await sendEmail(offer.driver.email, subject, html))
       sent += 1
     }

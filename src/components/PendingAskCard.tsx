@@ -1,4 +1,4 @@
-import { Calendar, Clock, UserRound } from 'lucide-react'
+import { Calendar, Clock, MapPin, UserRound } from 'lucide-react'
 import { formatDate, formatTime, pickupGuidance } from '../lib/format'
 import type { RideOffer } from '../types'
 
@@ -31,6 +31,11 @@ export default function PendingAskCard({ offer, calendarIntegrated, onAccept, on
         <span>
           <Clock size={12} /> {formatTime(request.shuttle_time)}
         </span>
+        {request.destination && (
+          <span>
+            <MapPin size={12} /> {request.destination.name}
+          </span>
+        )}
       </div>
       <p className="hint" style={{ margin: '0 0 8px' }}>{pickupGuidance(request.direction, request.shuttle_time)}</p>
 

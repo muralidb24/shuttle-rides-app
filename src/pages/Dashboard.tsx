@@ -202,6 +202,7 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
                 title={`Giving a ride to ${request.requester?.full_name ?? 'a neighbor'}`}
                 date={formatDate(request.shuttle_date)}
                 time={formatTime(request.shuttle_time)}
+                destination={request.destination?.name}
                 meta={pickupGuidance(request.direction, request.shuttle_time)}
                 contact={request.requester ? { name: request.requester.full_name, email: request.requester.email } : undefined}
                 onCancel={() => setCancelTarget({ kind: 'committed', offerId: offer.id })}
@@ -227,6 +228,7 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
                 title={directionLabel(request.direction) === 'traveling out' ? 'Traveling out' : 'Returning'}
                 date={formatDate(request.shuttle_date)}
                 time={formatTime(request.shuttle_time)}
+                destination={request.destination?.name}
                 meta={driver ? undefined : 'Waiting for a ride giver'}
                 confirmedContact={driver ? { name: driver.full_name, email: driver.email } : undefined}
                 onCancel={() => setCancelTarget({ kind: 'requested', requestId: request.id })}

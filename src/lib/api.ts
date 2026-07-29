@@ -1,5 +1,15 @@
 import { supabase } from '../supabaseClient'
-import type { AppNotification, Community, Direction, MemberRole, Profile, RequestAudienceMode, RideOffer, RideRequest } from '../types'
+import type {
+  AppNotification,
+  Community,
+  Destination,
+  Direction,
+  MemberRole,
+  Profile,
+  RequestAudienceMode,
+  RideOffer,
+  RideRequest
+} from '../types'
 
 export async function getProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
@@ -72,6 +82,55 @@ export async function fetchCommunityMembers(): Promise<Profile[]> {
 export async function setMemberRole(memberId: string, role: MemberRole) {
   const { error } = await supabase.rpc('set_member_role', { p_member_id: memberId, p_role: role })
   if (error) throw error
+}
+
+// --- Destinations ------------------------------------------------------
+// RLS scopes reads to the caller's own community automatically; writes are
+// additionally restricted to admins by policy (see 0017_destinations.sql),
+// so a non-admin calling create/update/delete just gets a Postgres RLS
+// error back rather than silently succeeding.
+
+export async function fetchDestinations(): Promise<Destination[]> {
+  const { data, error } = await supabase.from('destinations').select('*').order('name')
+  if (error) throw error
+  return (data ?? []) as Destination[]
+}
+
+export async function createDestination(communityId: string, name: string): Promise<Destination> {
+  const { data, error } = await supabase
+    .from('destinations')
+    .insert({ community_id: communityId, name: name.trim() })
+    .select('*')
+    .single()
+  if (error) throw error
+  return data as Destination
+}
+
+export async function updateDestination(id: string, name: string): Promise<Destination> {
+  const { data, error } = await supabase
+    .from('destinations')
+    .update({ name: name.trim() })
+    .eq('id', id)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data as Destination
+}
+
+export async function deleteDestination(id: string) {
+  const { error } = await supabase.from('destinations').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function updateDefaultDestination(userId: string, destinationId: string | null): Promise<Profile> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ default_destination_id: destinationId })
+    .eq('id', userId)
+    .select('*')
+    .single()
+  if (error) throw error
+  return data as Profile
 }
 
 export async function updateCalendarIntegrated(userId: string, integrated: boolean) {
@@ -175,7 +234,9 @@ export async function updateRequestAudienceSettings(
 export async function fetchCommittedRides(userId: string): Promise<RideOffer[]> {
   const { data, error } = await supabase
     .from('ride_offers')
-    .select('*, ride_request:ride_requests(*, requester:profiles!ride_requests_requester_id_fkey(*))')
+    .select(
+      '*, ride_request:ride_requests(*, requester:profiles!ride_requests_requester_id_fkey(*), destination:destinations(*))'
+    )
     .eq('driver_id', userId)
     .eq('status', 'accepted')
     .order('created_at', { ascending: false })
@@ -187,7 +248,7 @@ export async function fetchCommittedRides(userId: string): Promise<RideOffer[]> 
 export async function fetchRequestedRides(userId: string): Promise<RideRequest[]> {
   const { data, error } = await supabase
     .from('ride_requests')
-    .select('*, offers:ride_offers(*, driver:profiles!ride_offers_driver_id_fkey(*))')
+    .select('*, offers:ride_offers(*, driver:profiles!ride_offers_driver_id_fkey(*)), destination:destinations(*)')
     .eq('requester_id', userId)
     .neq('status', 'cancelled')
     .order('created_at', { ascending: false })
@@ -199,7 +260,9 @@ export async function fetchRequestedRides(userId: string): Promise<RideRequest[]
 export async function fetchPendingAsks(userId: string): Promise<RideOffer[]> {
   const { data, error } = await supabase
     .from('ride_offers')
-    .select('*, ride_request:ride_requests(*, requester:profiles!ride_requests_requester_id_fkey(*))')
+    .select(
+      '*, ride_request:ride_requests(*, requester:profiles!ride_requests_requester_id_fkey(*), destination:destinations(*))'
+    )
     .eq('driver_id', userId)
     .eq('status', 'pending')
     .order('created_at', { ascending: false })
@@ -234,7 +297,8 @@ export async function createRideRequest(
   requesterId: string,
   direction: Direction,
   shuttleDate: string,
-  shuttleTime: string
+  shuttleTime: string,
+  destinationId: string
 ): Promise<RideRequest> {
   const { data, error } = await supabase
     .from('ride_requests')
@@ -242,7 +306,8 @@ export async function createRideRequest(
       requester_id: requesterId,
       direction,
       shuttle_date: shuttleDate,
-      shuttle_time: shuttleTime
+      shuttle_time: shuttleTime,
+      destination_id: destinationId
     })
     .select('*')
     .single()

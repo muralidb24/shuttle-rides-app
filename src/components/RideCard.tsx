@@ -1,4 +1,4 @@
-import { Car, Calendar, CheckCircle2, Clock, Mail, X } from 'lucide-react'
+import { Car, Calendar, CheckCircle2, Clock, Mail, MapPin, X } from 'lucide-react'
 
 interface Contact {
   name: string
@@ -9,6 +9,7 @@ interface Props {
   title: string
   date: string
   time: string
+  destination?: string
   meta?: string
   contact?: Contact
   confirmedContact?: Contact
@@ -16,7 +17,17 @@ interface Props {
   cancelLabel?: string
 }
 
-export default function RideCard({ title, date, time, meta, contact, confirmedContact, onCancel, cancelLabel }: Props) {
+export default function RideCard({
+  title,
+  date,
+  time,
+  destination,
+  meta,
+  contact,
+  confirmedContact,
+  onCancel,
+  cancelLabel
+}: Props) {
   return (
     <div className="ride-card">
       <div className="ride-card-icon">
@@ -31,6 +42,11 @@ export default function RideCard({ title, date, time, meta, contact, confirmedCo
           <span>
             <Clock size={12} /> {time}
           </span>
+          {destination && (
+            <span>
+              <MapPin size={12} /> {destination}
+            </span>
+          )}
         </div>
         {confirmedContact ? (
           <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--success, #1a9e5c)', margin: '2px 0 0' }}>

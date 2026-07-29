@@ -18,7 +18,8 @@ export default function CalendarPrompt({ offer, onDone }: Props) {
     title,
     description,
     date: request.shuttle_date,
-    time: request.shuttle_time
+    time: request.shuttle_time,
+    location: request.destination?.name
   }
 
   async function handleAdd() {

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { UserRound, BookOpen, MessageCircle, LogOut, Mail, Users, Settings } from 'lucide-react'
+import { UserRound, BookOpen, MessageCircle, LogOut, Mail, Users, Settings, MapPin } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import { updateEmailNotificationsEnabled } from '../lib/api'
 import { clearPushToken } from '../lib/push'
 import AudienceSettingsDialog from './AudienceSettingsDialog'
 import CommunitySettingsDialog from './CommunitySettingsDialog'
+import DefaultDestinationDialog from './DefaultDestinationDialog'
 import type { Profile, RequestAudienceMode } from '../types'
 
 interface Props {
@@ -22,6 +23,7 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
   const [open, setOpen] = useState(false)
   const [audienceDialogOpen, setAudienceDialogOpen] = useState(false)
   const [communityDialogOpen, setCommunityDialogOpen] = useState(false)
+  const [destinationDialogOpen, setDestinationDialogOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -99,6 +101,15 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
           >
             <Users size={16} /> Who sees my requests: {AUDIENCE_MODE_LABELS[profile.request_audience_mode]}
           </button>
+          <button
+            className="menu-item"
+            onClick={() => {
+              setDestinationDialogOpen(true)
+              setOpen(false)
+            }}
+          >
+            <MapPin size={16} /> Default destination
+          </button>
           {profile.role === 'admin' && (
             <button
               className="menu-item"
@@ -130,6 +141,14 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
       )}
 
       {communityDialogOpen && <CommunitySettingsDialog profile={profile} onClose={() => setCommunityDialogOpen(false)} />}
+
+      {destinationDialogOpen && (
+        <DefaultDestinationDialog
+          profile={profile}
+          onClose={() => setDestinationDialogOpen(false)}
+          onProfileChange={onProfileChange}
+        />
+      )}
     </div>
   )
 }
