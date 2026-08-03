@@ -1,9 +1,20 @@
-// Edge function: sends a native push notification (via Firebase Cloud
-// Messaging's HTTP v1 API) for a single row in the `notifications` table.
-// Triggered automatically by the `notifications_send_push` trigger
-// (see supabase/migrations/0016_push_notifications.sql) right after any
-// in-app notification is created - not meant to be called directly by the
-// frontend.
+// Edge function: sends a native push notification for a single row in the
+// `notifications` table. Triggered automatically by the
+// `notifications_send_push` trigger (see supabase/migrations/0016_push_notifications.sql)
+// right after any in-app notification is created - not meant to be called
+// directly by the frontend.
+//
+// Android tokens go through Firebase Cloud Messaging's HTTP v1 API, since
+// Android registers through Google Play Services/FCM natively and the token
+// Capacitor returns there already IS a real FCM registration token.
+//
+// iOS tokens go DIRECTLY to Apple's push service (APNs) instead. Capacitor's
+// push-notifications plugin on iOS talks to APNs directly (no Firebase SDK
+// involved on the client), so the token it returns is a raw Apple device
+// token - not an FCM registration token. Sending that token to FCM's API
+// gets rejected outright (confirmed live: FCM returned 400/INVALID_ARGUMENT
+// for a real, valid device token). Talking to Apple directly sidesteps that
+// mismatch entirely.
 //
 // Deploy: supabase functions deploy send-push --no-verify-jwt
 // Secrets needed (supabase secrets set ...):
@@ -13,11 +24,18 @@
 //                                     Firebase Console > Project Settings >
 //                                     Service Accounts > Generate new private key.
 //                                     Paste the entire file contents as-is.
+//                                     (Android only.)
+//   APNS_KEY_ID                    - the 10-character Key ID shown when you
+//                                     created the APNs Authentication Key in
+//                                     Apple Developer portal (also in the
+//                                     downloaded filename: AuthKey_<ID>.p8).
+//   APNS_TEAM_ID                   - your Apple Developer Team ID.
+//   APNS_PRIVATE_KEY               - the full contents of that .p8 file, as-is.
 //
-// FCM HTTP v1 requires an OAuth2 access token minted from that service
-// account (there's no more "server key" you can just paste in) - the JWT
-// signing below does that by hand with Deno's Web Crypto API, since the
-// Firebase Admin SDK isn't available in the edge runtime.
+// FCM HTTP v1 and APNs's provider API both require a signed JWT rather than
+// a static server key you can just paste in - both are hand-signed below
+// with Deno's Web Crypto API, since neither the Firebase Admin SDK nor
+// Apple's server libraries are available in the edge runtime.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
@@ -25,6 +43,16 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const CRON_SECRET = Deno.env.get('CRON_SECRET') ?? ''
 const FIREBASE_SERVICE_ACCOUNT_JSON = Deno.env.get('FIREBASE_SERVICE_ACCOUNT_JSON') ?? ''
+const APNS_KEY_ID = Deno.env.get('APNS_KEY_ID') ?? ''
+const APNS_TEAM_ID = Deno.env.get('APNS_TEAM_ID') ?? ''
+const APNS_PRIVATE_KEY = Deno.env.get('APNS_PRIVATE_KEY') ?? ''
+const APNS_TOPIC = 'com.postalcolony.shuttlerides'
+// TestFlight/App Store builds are always signed with a Distribution
+// provisioning profile, which Xcode pairs with the production APNs
+// environment at archive time regardless of what's in the source
+// entitlements file - so this app's installed builds only ever need the
+// production APNs host, never the sandbox one.
+const APNS_HOST = 'https://api.push.apple.com'
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
@@ -49,8 +77,8 @@ function base64url(input: ArrayBuffer | string): string {
 
 function pemToArrayBuffer(pem: string): ArrayBuffer {
   const b64 = pem
-    .replace(/-----BEGIN PRIVATE KEY-----/, '')
-    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/-----BEGIN (PRIVATE KEY|EC PRIVATE KEY)-----/, '')
+    .replace(/-----END (PRIVATE KEY|EC PRIVATE KEY)-----/, '')
     .replace(/\s+/g, '')
   const binary = atob(b64)
   const bytes = new Uint8Array(binary.length)
@@ -58,14 +86,18 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
   return bytes.buffer
 }
 
+// ---------------------------------------------------------------------------
+// Android: Firebase Cloud Messaging (HTTP v1)
+// ---------------------------------------------------------------------------
+
 // In-memory only - edge function instances are short-lived, so this just
 // avoids re-signing a JWT + round-tripping to Google on every notification
 // within the same warm instance. Not a correctness requirement.
-let cachedAccessToken: { token: string; expiresAt: number } | null = null
+let cachedFcmAccessToken: { token: string; expiresAt: number } | null = null
 
 async function getFcmAccessToken(serviceAccount: { client_email: string; private_key: string }): Promise<string> {
-  if (cachedAccessToken && cachedAccessToken.expiresAt > Date.now() + 30_000) {
-    return cachedAccessToken.token
+  if (cachedFcmAccessToken && cachedFcmAccessToken.expiresAt > Date.now() + 30_000) {
+    return cachedFcmAccessToken.token
   }
 
   const now = Math.floor(Date.now() / 1000)
@@ -102,14 +134,8 @@ async function getFcmAccessToken(serviceAccount: { client_email: string; private
   if (!resp.ok || !json.access_token) {
     throw new Error(`Failed to mint FCM access token: ${JSON.stringify(json)}`)
   }
-  cachedAccessToken = { token: json.access_token, expiresAt: Date.now() + json.expires_in * 1000 }
+  cachedFcmAccessToken = { token: json.access_token, expiresAt: Date.now() + json.expires_in * 1000 }
   return json.access_token
-}
-
-interface FcmResult {
-  ok: boolean
-  status: number
-  errorStatus?: string
 }
 
 async function sendFcmMessage(
@@ -119,7 +145,7 @@ async function sendFcmMessage(
   title: string,
   body: string,
   data: Record<string, string>
-): Promise<FcmResult> {
+): Promise<{ ok: boolean; status: number; stale: boolean }> {
   const resp = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
     method: 'POST',
     headers: {
@@ -132,12 +158,80 @@ async function sendFcmMessage(
         notification: { title, body },
         data,
         android: { priority: 'high' },
-        apns: { headers: { 'apns-priority': '10' }, payload: { aps: { sound: 'default' } } },
       },
     }),
   })
   const json = await resp.json().catch(() => ({}))
-  return { ok: resp.ok, status: resp.status, errorStatus: json?.error?.status }
+  const errorStatus = json?.error?.status
+  // FCM's way of saying "this token is dead, stop using it".
+  const stale = !resp.ok && (errorStatus === 'UNREGISTERED' || errorStatus === 'NOT_FOUND' || errorStatus === 'INVALID_ARGUMENT')
+  return { ok: resp.ok, status: resp.status, stale }
+}
+
+// ---------------------------------------------------------------------------
+// iOS: Apple Push Notification service (APNs), talked to directly
+// ---------------------------------------------------------------------------
+
+let cachedApnsProviderToken: { token: string; mintedAt: number } | null = null
+
+async function getApnsProviderToken(): Promise<string> {
+  // Apple requires this token be re-minted at least once an hour; refreshing
+  // every 55 minutes leaves margin without re-signing on every request.
+  if (cachedApnsProviderToken && Date.now() - cachedApnsProviderToken.mintedAt < 55 * 60 * 1000) {
+    return cachedApnsProviderToken.token
+  }
+
+  const now = Math.floor(Date.now() / 1000)
+  const header = { alg: 'ES256', kid: APNS_KEY_ID }
+  const claim = { iss: APNS_TEAM_ID, iat: now }
+  const signingInput = `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(claim))}`
+
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8',
+    pemToArrayBuffer(APNS_PRIVATE_KEY),
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    false,
+    ['sign']
+  )
+  // Web Crypto's ECDSA signature output is already the raw (r || s) format
+  // JWTs expect for ES256 - unlike some other libraries, no DER conversion
+  // is needed here.
+  const signature = await crypto.subtle.sign(
+    { name: 'ECDSA', hash: 'SHA-256' },
+    cryptoKey,
+    new TextEncoder().encode(signingInput)
+  )
+  const jwt = `${signingInput}.${base64url(signature)}`
+  cachedApnsProviderToken = { token: jwt, mintedAt: Date.now() }
+  return jwt
+}
+
+async function sendApnsMessage(
+  deviceToken: string,
+  title: string,
+  body: string,
+  data: Record<string, string>
+): Promise<{ ok: boolean; status: number; stale: boolean }> {
+  const providerToken = await getApnsProviderToken()
+  const resp = await fetch(`${APNS_HOST}/3/device/${deviceToken}`, {
+    method: 'POST',
+    headers: {
+      authorization: `bearer ${providerToken}`,
+      'apns-topic': APNS_TOPIC,
+      'apns-push-type': 'alert',
+      'apns-priority': '10',
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      aps: { alert: { title, body }, sound: 'default' },
+      ...data,
+    }),
+  })
+  // A dead token gets a 410 (Unregistered) or a 400 with reason
+  // BadDeviceToken - either way, stop using it.
+  const json = await resp.json().catch(() => ({}))
+  const stale = resp.status === 410 || (resp.status === 400 && json?.reason === 'BadDeviceToken')
+  return { ok: resp.ok, status: resp.status, stale }
 }
 
 Deno.serve(async (req) => {
@@ -148,12 +242,6 @@ Deno.serve(async (req) => {
   const auth = req.headers.get('Authorization') ?? ''
   if (!CRON_SECRET || auth !== `Bearer ${CRON_SECRET}`) {
     return jsonResponse({ error: 'unauthorized' }, 401)
-  }
-
-  if (!FIREBASE_SERVICE_ACCOUNT_JSON) {
-    // Not configured yet - a harmless no-op rather than an error, same
-    // stance as trigger_send_reminders() before CRON_SECRET was set in Vault.
-    return jsonResponse({ ok: true, skipped: 'FIREBASE_SERVICE_ACCOUNT_JSON not set' })
   }
 
   let notificationId: string | undefined
@@ -189,31 +277,45 @@ Deno.serve(async (req) => {
       return jsonResponse({ ok: true, sent: 0, reason: 'recipient has no registered devices' })
     }
 
-    const serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT_JSON)
-    const accessToken = await getFcmAccessToken(serviceAccount)
+    const data = {
+      type: notif.type,
+      notification_id: notif.id,
+      ride_request_id: notif.ride_request_id ?? '',
+    }
+
+    const iosTokens = tokens.filter((t) => t.platform === 'ios')
+    const androidTokens = tokens.filter((t) => t.platform === 'android')
 
     const results: Array<{ token_id: string; platform: string; ok: boolean; status: number }> = []
     const staleTokenIds: string[] = []
 
-    for (const t of tokens) {
-      const result = await sendFcmMessage(
-        serviceAccount.project_id,
-        accessToken,
-        t.token,
-        notif.title,
-        notif.body,
-        {
-          type: notif.type,
-          notification_id: notif.id,
-          ride_request_id: notif.ride_request_id ?? '',
+    if (iosTokens.length > 0) {
+      if (!APNS_KEY_ID || !APNS_TEAM_ID || !APNS_PRIVATE_KEY) {
+        results.push(
+          ...iosTokens.map((t) => ({ token_id: t.id, platform: t.platform, ok: false, status: 0 }))
+        )
+      } else {
+        for (const t of iosTokens) {
+          const result = await sendApnsMessage(t.token, notif.title, notif.body, data)
+          results.push({ token_id: t.id, platform: t.platform, ok: result.ok, status: result.status })
+          if (result.stale) staleTokenIds.push(t.id)
         }
-      )
-      results.push({ token_id: t.id, platform: t.platform, ok: result.ok, status: result.status })
+      }
+    }
 
-      // FCM's way of saying "this token is dead, stop using it" - clean it
-      // up so future notifications don't keep paying the round-trip cost.
-      if (!result.ok && (result.errorStatus === 'UNREGISTERED' || result.errorStatus === 'NOT_FOUND' || result.errorStatus === 'INVALID_ARGUMENT')) {
-        staleTokenIds.push(t.id)
+    if (androidTokens.length > 0) {
+      if (!FIREBASE_SERVICE_ACCOUNT_JSON) {
+        results.push(
+          ...androidTokens.map((t) => ({ token_id: t.id, platform: t.platform, ok: false, status: 0 }))
+        )
+      } else {
+        const serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT_JSON)
+        const accessToken = await getFcmAccessToken(serviceAccount)
+        for (const t of androidTokens) {
+          const result = await sendFcmMessage(serviceAccount.project_id, accessToken, t.token, notif.title, notif.body, data)
+          results.push({ token_id: t.id, platform: t.platform, ok: result.ok, status: result.status })
+          if (result.stale) staleTokenIds.push(t.id)
+        }
       }
     }
 

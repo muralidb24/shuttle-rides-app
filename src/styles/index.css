@@ -58,6 +58,12 @@ body {
   margin: 0 auto;
   min-height: 100vh;
   background: var(--surface-1);
+  /* On native iOS/Android, the app content renders full-screen behind the
+     status bar/notch and the home-indicator area unless we push it in
+     ourselves. env(safe-area-inset-*) resolves to 0 on the web (and on
+     older/non-notch devices), so this is a no-op there. */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 input, select, button {

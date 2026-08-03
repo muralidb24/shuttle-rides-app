@@ -22,6 +22,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Custom URL scheme for magic-link sign-in: lets tapping the
+                 sign-in email link on Android open this app directly instead
+                 of falling through to a browser. See src/lib/deeplink.ts. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="shuttlerides" />
+            </intent-filter>
+
         </activity>
 
         <provider

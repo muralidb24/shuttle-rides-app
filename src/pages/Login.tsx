@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { supabase } from '../supabaseClient'
 
 export default function Login() {
@@ -11,13 +12,22 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    // On iOS/Android, the app's real address is a private local one, not
+    // the website URL - so the sign-in link needs to point at the custom
+    // "shuttlerides://" scheme those apps register (see src/lib/deeplink.ts)
+    // instead of the website, or tapping it would just open a browser
+    // instead of the app. The web build keeps redirecting to itself.
+    const redirectTo = Capacitor.isNativePlatform()
+      ? 'shuttlerides://login-callback'
+      : // Use the full current path, not just the origin: on GitHub Pages
+        // the app lives under a subpath (https://<user>.github.io/<repo>/),
+        // and window.location.origin alone points at the bare github.io
+        // root, which has no Pages site and 404s.
+        window.location.origin + window.location.pathname
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      // Use the full current path, not just the origin: on GitHub Pages the
-      // app lives under a subpath (https://<user>.github.io/<repo>/), and
-      // window.location.origin alone points at the bare github.io root,
-      // which has no Pages site and 404s.
-      options: { emailRedirectTo: window.location.origin + window.location.pathname }
+      options: { emailRedirectTo: redirectTo }
     })
     setLoading(false)
     if (error) {
@@ -30,7 +40,7 @@ export default function Login() {
   return (
     <div style={{ padding: '2rem 1.25rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-        <span style={{ fontWeight: 500, fontSize: 15 }}>Neighborhood shuttle rides</span>
+        <span style={{ fontWeight: 500, fontSize: 15 }}>Ride, please!</span>
       </div>
 
       {sent ? (

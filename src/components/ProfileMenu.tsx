@@ -86,7 +86,7 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
           <a href="guide.html" target="_blank" rel="noopener noreferrer" className="menu-item">
             <BookOpen size={16} /> User guide
           </a>
-          <a href="mailto:rides@postalcolony.com?subject=Shuttle%20rides%20app%20feedback" className="menu-item">
+          <a href="mailto:rides@postalcolony.com?subject=Ride%2C%20please%20app%20feedback" className="menu-item">
             <MessageCircle size={16} /> Send feedback
           </a>
           <button className="menu-item" onClick={toggleEmail}>

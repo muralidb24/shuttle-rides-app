@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import DirectionToggle from '../components/DirectionToggle'
 import { createRideRequest, fetchDestinations } from '../lib/api'
-import { isOnHalfHour, pickupGuidance } from '../lib/format'
 import type { Destination, Direction } from '../types'
 
 interface Props {
@@ -44,10 +43,6 @@ export default function RequestRide({ userId, defaultDestinationId, onCreated, o
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!date || !time || !destinationId) return
-    if (!isOnHalfHour(time)) {
-      setError('The shuttle only leaves on the hour or half hour - pick a :00 or :30 time.')
-      return
-    }
     setLoading(true)
     setError(null)
     try {
@@ -70,7 +65,7 @@ export default function RequestRide({ userId, defaultDestinationId, onCreated, o
         <p className="hint" style={{ margin: '0 0 16px' }}>
           {direction === 'to_shuttle'
             ? "We'll let your ride giver know to pick you up from home."
-            : "We'll let your ride giver know to meet you at the shuttle stop."}
+            : "We'll let your ride giver know to pick you up from your destination."}
         </p>
 
         <p className="label">Destination</p>
@@ -101,21 +96,14 @@ export default function RequestRide({ userId, defaultDestinationId, onCreated, o
         <p className="label">{direction === 'to_shuttle' ? 'Travel date' : 'Return date'}</p>
         <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} style={{ marginBottom: 10 }} />
 
-        <p className="label">{direction === 'to_shuttle' ? 'Departure time' : 'Arrival time'}</p>
+        <p className="label">Pickup time</p>
         <input
           type="time"
           required
-          step={1800}
           value={time}
           onChange={(e) => setTime(e.target.value)}
-          style={{ marginBottom: 6 }}
+          style={{ marginBottom: 16 }}
         />
-        <p className="hint" style={{ margin: '0 0 16px' }}>
-          {direction === 'to_shuttle'
-            ? 'The shuttle leaves on the hour or half hour. This is when it departs, not your pickup time'
-            : 'The shuttle arrives on the hour or half hour. This is when it gets back, not your pickup time'}
-          {time && isOnHalfHour(time) ? ` - ${pickupGuidance(direction, time)}.` : '.'}
-        </p>
 
         {error && <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 0 }}>{error}</p>}
 

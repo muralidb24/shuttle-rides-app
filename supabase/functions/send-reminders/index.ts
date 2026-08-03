@@ -65,23 +65,16 @@ function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10)
 }
 
-function subtractMinutes(time: string, minutes: number): string {
-  const [h, m] = time.split(':').map(Number)
-  const total = h * 60 + m - minutes
-  const wrapped = ((total % 1440) + 1440) % 1440
-  const hh = Math.floor(wrapped / 60)
-  const mm = wrapped % 60
-  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
-}
-
-// Riders only give the shuttle date/time - work out pickup guidance from
-// direction + that time (10-min shuttle, so a 15-min-early pickup covers it).
-function pickupGuidance(direction: string, shuttleTime: string): string {
-  if (direction === 'to_shuttle') {
-    const pickup = subtractMinutes(shuttleTime, 15)
-    return `Pick up from home around ${pickup} - about 15 minutes before the ${shuttleTime} shuttle.`
-  }
-  return `Be at the shuttle stop by ${shuttleTime}.`
+// Destinations are community-configurable now (not a single fixed shuttle
+// stop with a known drive time), so there's no basis left for computing a
+// derived "leave N minutes early" buffer - the date/time a requester picks
+// IS the pickup time, full stop. This just describes *where* the pickup
+// happens for the chosen direction: home when heading out, the destination
+// itself when heading back. Duplicated from src/lib/format.ts since this
+// edge function runs in a separate Deno runtime with no shared import.
+function pickupLocationLabel(direction: string, destinationName?: string | null): string {
+  if (direction === 'to_shuttle') return 'Pick up from home.'
+  return destinationName ? `Pick up from ${destinationName}.` : 'Pick up from the destination.'
 }
 
 Deno.serve(async (req) => {
@@ -122,20 +115,24 @@ Deno.serve(async (req) => {
     const when = request.shuttle_date === todayStr ? 'today' : 'tomorrow'
     const requesterName = request.requester?.full_name ?? 'your neighbor'
     const driverName = offer.driver?.full_name ?? 'your ride giver'
-    const guidance = pickupGuidance(request.direction, request.shuttle_time)
+    const guidance = pickupLocationLabel(request.direction, (request.destination as { name: string } | null)?.name)
     const destinationName = (request.destination as { name: string } | null)?.name
-    const destinationSuffix = destinationName ? ` to/from ${destinationName}` : ''
+    const destinationSuffix = destinationName
+      ? request.direction === 'to_shuttle'
+        ? ` to ${destinationName}`
+        : ` from ${destinationName}`
+      : ''
 
     if (request.requester?.email && request.requester.email_notifications_enabled !== false) {
       const subject = `Reminder: your ride ${when}`
-      const html = `<p>This is to remind you that ${driverName} has committed to give you a ride ${when}${destinationSuffix}, for the ${request.shuttle_time} shuttle on ${request.shuttle_date}.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
+      const html = `<p>This is to remind you that ${driverName} has committed to give you a ride ${when}${destinationSuffix}, at ${request.shuttle_time} on ${request.shuttle_date}.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
       emailResults.push(await sendEmail(request.requester.email, subject, html))
       sent += 1
     }
 
     if (offer.driver?.email && offer.driver.email_notifications_enabled !== false) {
       const subject = `Reminder: you're giving ${requesterName} a ride ${when}`
-      const html = `<p>This is to remind you that you've committed to give ${requesterName} a ride ${when}${destinationSuffix}, for the ${request.shuttle_time} shuttle on ${request.shuttle_date}.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
+      const html = `<p>This is to remind you that you've committed to give ${requesterName} a ride ${when}${destinationSuffix}, at ${request.shuttle_time} on ${request.shuttle_date}.</p><p>${guidance}</p><p><a href="${APP_URL}">Open the app</a> if your plans changed and you need to cancel.</p>`
       emailResults.push(await sendEmail(offer.driver.email, subject, html))
       sent += 1
     }

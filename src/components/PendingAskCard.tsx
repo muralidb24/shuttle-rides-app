@@ -1,5 +1,5 @@
 import { Calendar, Clock, MapPin, UserRound } from 'lucide-react'
-import { formatDate, formatTime, pickupGuidance } from '../lib/format'
+import { formatDate, formatTime, pickupLocationLabel } from '../lib/format'
 import type { RideOffer } from '../types'
 
 interface Props {
@@ -37,12 +37,22 @@ export default function PendingAskCard({ offer, calendarIntegrated, onAccept, on
           </span>
         )}
       </div>
-      <p className="hint" style={{ margin: '0 0 8px' }}>{pickupGuidance(request.direction, request.shuttle_time)}</p>
+      <p className="hint" style={{ margin: '0 0 8px' }}>{pickupLocationLabel(request.direction, request.destination?.name)}</p>
 
       {calendarIntegrated ? (
-        <button className="primary" style={{ width: '100%', fontSize: 13 }} disabled={busy} onClick={() => onAccept(offer.id)}>
-          Offer to give a ride
-        </button>
+        <>
+          <button className="primary" style={{ width: '100%', fontSize: 13, marginBottom: 8 }} disabled={busy} onClick={() => onAccept(offer.id)}>
+            Offer to give a ride
+          </button>
+          <button
+            className="ghost"
+            style={{ width: '100%', fontSize: 12, height: 'auto', padding: '2px 0', color: 'var(--text-secondary)' }}
+            disabled={busy}
+            onClick={() => onDecline(offer.id)}
+          >
+            Can't make it this time
+          </button>
+        </>
       ) : (
         <>
           <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 8px' }}>Available and willing to give a ride?</p>

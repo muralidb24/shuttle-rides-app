@@ -10,7 +10,7 @@ import {
   fetchPendingAsks,
   fetchRequestedRides
 } from '../lib/api'
-import { directionLabel, formatDate, formatTime, pickupGuidance } from '../lib/format'
+import { directionLabel, formatDate, formatTime, pickupLocationLabel } from '../lib/format'
 import RideCard from '../components/RideCard'
 import PendingAskCard from '../components/PendingAskCard'
 import CalendarPrompt from '../components/CalendarPrompt'
@@ -203,7 +203,7 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
                 date={formatDate(request.shuttle_date)}
                 time={formatTime(request.shuttle_time)}
                 destination={request.destination?.name}
-                meta={pickupGuidance(request.direction, request.shuttle_time)}
+                meta={pickupLocationLabel(request.direction, request.destination?.name)}
                 contact={request.requester ? { name: request.requester.full_name, email: request.requester.email } : undefined}
                 onCancel={() => setCancelTarget({ kind: 'committed', offerId: offer.id })}
               />
@@ -242,6 +242,7 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
           title={cancelTarget.kind === 'committed' ? "Cancel this ride you're giving?" : 'Cancel your ride request?'}
           onConfirm={handleConfirmCancel}
           onClose={() => setCancelTarget(null)}
+          showCalendarReminder={cancelTarget.kind === 'committed'}
         />
       )}
     </div>

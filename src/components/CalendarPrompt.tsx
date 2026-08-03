@@ -11,7 +11,7 @@ interface Props {
 export default function CalendarPrompt({ offer, onDone }: Props) {
   const request = offer.ride_request!
   const requesterName = request.requester?.full_name ?? 'your neighbor'
-  const title = `Shuttle ride: give ${requesterName} a ride`
+  const title = `Give ${requesterName} a ride`
   const description = `Give ${requesterName} a ride ${directionLabel(request.direction)}.`
 
   const event = {

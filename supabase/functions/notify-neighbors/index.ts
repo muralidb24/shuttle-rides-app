@@ -272,16 +272,18 @@ function eventsOnDate(icsText: string, targetDateStr: string, timeZone: string):
   return results
 }
 
-// The busy window around a ride: pickup + drive + drop-off (or the reverse
-// for a return trip), consistent with the ~10 minute shuttle drive and the
-// "no more than half an hour round trip" the spec describes. Skewed
-// slightly differently per direction since the driver's own commitment
-// falls on a different side of the shuttle time.
-function busyWindow(direction: string, shuttleDate: string, shuttleTime: string, timeZone: string): { start: Date; end: Date } {
-  const [sh, sm] = shuttleTime.split(':').map(Number)
-  const shuttleMinutes = sh * 60 + sm
-  const windowStartMin = direction === 'to_shuttle' ? shuttleMinutes - 20 : shuttleMinutes - 15
-  const windowEndMin = direction === 'to_shuttle' ? shuttleMinutes + 10 : shuttleMinutes + 15
+// The busy window around a ride: destinations are now community-configurable
+// (not a single fixed stop with a known drive time), so there's no longer a
+// basis for an asymmetric to/from adjustment - just a flat buffer around the
+// requested pickup time itself, consistent with the "no more than half an
+// hour round trip" the spec describes.
+const RIDE_BUSY_BUFFER_MIN = 15
+
+function busyWindow(shuttleDate: string, shuttleTime: string, timeZone: string): { start: Date; end: Date } {
+  const [ph, pm] = shuttleTime.split(':').map(Number)
+  const pickupMinutes = ph * 60 + pm
+  const windowStartMin = pickupMinutes - RIDE_BUSY_BUFFER_MIN
+  const windowEndMin = pickupMinutes + RIDE_BUSY_BUFFER_MIN
   const toHM = (mins: number) => {
     const wrapped = ((mins % 1440) + 1440) % 1440
     return { h: Math.floor(wrapped / 60), m: wrapped % 60 }
@@ -297,7 +299,6 @@ function busyWindow(direction: string, shuttleDate: string, shuttleTime: string,
 
 async function checkCalendarAvailability(
   feedUrl: string | null | undefined,
-  direction: string,
   shuttleDate: string,
   shuttleTime: string
 ): Promise<{ available: boolean; checked: boolean; error?: string }> {
@@ -308,7 +309,7 @@ async function checkCalendarAvailability(
       return { available: true, checked: false, error: `feed fetch failed: ${res.status}` }
     }
     const text = await res.text()
-    const window = busyWindow(direction, shuttleDate, shuttleTime, ICS_TIMEZONE)
+    const window = busyWindow(shuttleDate, shuttleTime, ICS_TIMEZONE)
     const events = eventsOnDate(text, shuttleDate, ICS_TIMEZONE)
     const conflict = events.some((ev) => ev.start < window.end && ev.end > window.start)
     return { available: !conflict, checked: true }
@@ -351,26 +352,16 @@ async function hasCommittedRideConflict(driverId: string, shuttleDate: string, s
   return false
 }
 
-function subtractMinutes(time: string, minutes: number): string {
-  const [h, m] = time.split(':').map(Number)
-  const total = h * 60 + m - minutes
-  const wrapped = ((total % 1440) + 1440) % 1440
-  const hh = Math.floor(wrapped / 60)
-  const mm = wrapped % 60
-  return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
-}
-
-// The shuttle is a fixed ~10 minute drive away and always leaves on the hour
-// or half hour, so a ride giver picking someone up to catch it should leave
-// home about 15 minutes before the shuttle time (10 min drive + 5 min
-// buffer). Returning is simpler - just be at the stop when the shuttle
-// arrives.
-function pickupGuidance(direction: string, shuttleTime: string): string {
-  if (direction === 'to_shuttle') {
-    const pickup = subtractMinutes(shuttleTime, 15)
-    return `Plan to pick them up from home around ${pickup} - about 15 minutes before the ${shuttleTime} shuttle.`
-  }
-  return `Plan to be at the shuttle stop by ${shuttleTime} to bring them home.`
+// Destinations are community-configurable now (not a single fixed shuttle
+// stop with a known drive time), so there's no basis left for computing a
+// derived "leave N minutes early" buffer - the date/time a requester picks
+// IS the pickup time, full stop. This just describes *where* the pickup
+// happens for the chosen direction: home when heading out, the destination
+// itself when heading back. Duplicated from src/lib/format.ts since this
+// edge function runs in a separate Deno runtime with no shared import.
+function pickupLocationLabel(direction: string, destinationName?: string | null): string {
+  if (direction === 'to_shuttle') return 'Pick up from home.'
+  return destinationName ? `Pick up from ${destinationName}.` : 'Pick up from the destination.'
 }
 
 Deno.serve(async (req) => {
@@ -428,9 +419,13 @@ Deno.serve(async (req) => {
 
     const direction = rideRequest.direction === 'to_shuttle' ? 'traveling out' : 'returning home'
     const requesterName = rideRequest.requester?.full_name ?? 'A neighbor'
-    const guidance = pickupGuidance(rideRequest.direction, rideRequest.shuttle_time)
     const destinationName = (rideRequest.destination as { name: string } | null)?.name
-    const destinationSuffix = destinationName ? ` to/from ${destinationName}` : ''
+    const destinationSuffix = destinationName
+      ? rideRequest.direction === 'to_shuttle'
+        ? ` to ${destinationName}`
+        : ` from ${destinationName}`
+      : ''
+    const guidance = pickupLocationLabel(rideRequest.direction, destinationName)
 
     // Audience control: a requester can restrict which neighbors their own
     // requests go to (everyone / everyone except some / only some), set
@@ -472,7 +467,6 @@ Deno.serve(async (req) => {
       if (neighbor.calendar_integrated && neighbor.calendar_feed_url) {
         const result = await checkCalendarAvailability(
           neighbor.calendar_feed_url,
-          rideRequest.direction,
           rideRequest.shuttle_date,
           rideRequest.shuttle_time
         )
@@ -518,7 +512,7 @@ Deno.serve(async (req) => {
 
       asked += 1
       const subject = `Ride requested: ${requesterName} is ${direction}`
-      const intro = `<p>${requesterName} is ${direction}${destinationSuffix} and needs a ride for the ${rideRequest.shuttle_date} shuttle at ${rideRequest.shuttle_time}.</p><p>${guidance}</p>`
+      const intro = `<p>${requesterName} is ${direction}${destinationSuffix} and needs a ride on ${rideRequest.shuttle_date} at ${rideRequest.shuttle_time}.</p><p>${guidance}</p>`
       const body = neighbor.calendar_integrated
         ? `${intro}<p>You're free at that time. <a href="${APP_URL}">Open the app</a> to offer to give this ride.</p>`
         : `${intro}<p>Are you available and willing to give this ride? <a href="${APP_URL}">Open the app</a> to respond.</p>`
@@ -527,7 +521,7 @@ Deno.serve(async (req) => {
         user_id: neighbor.id,
         type: 'ride_requested',
         title: 'Ride requested',
-        body: `${requesterName} is ${direction}${destinationSuffix}, shuttle at ${rideRequest.shuttle_time} on ${rideRequest.shuttle_date}. ${guidance}`,
+        body: `${requesterName} is ${direction}${destinationSuffix} on ${rideRequest.shuttle_date} at ${rideRequest.shuttle_time}. ${guidance}`,
         ride_request_id: rideRequest.id,
         related_user_id: rideRequest.requester_id
       })

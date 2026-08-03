@@ -59,9 +59,9 @@ export function icsDownloadUrl(input: CalendarEventInput): string {
   const ics = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Neighborhood Shuttle Rides//EN',
+    'PRODID:-//Ride Please//EN',
     'BEGIN:VEVENT',
-    `UID:${Date.now()}@shuttle-rides`,
+    `UID:${Date.now()}@ride-please`,
     `DTSTAMP:${formatGoogleDate(new Date())}`,
     `DTSTART:${formatGoogleDate(start)}`,
     `DTEND:${formatGoogleDate(end)}`,

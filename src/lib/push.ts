@@ -23,22 +23,35 @@ function platform(): 'ios' | 'android' | null {
 }
 
 export async function initPushNotifications(userId: string): Promise<void> {
-  if (!Capacitor.isNativePlatform()) return
+  console.log('[push] initPushNotifications called for user', userId)
+
+  if (!Capacitor.isNativePlatform()) {
+    console.log('[push] not a native platform, skipping')
+    return
+  }
   const plat = platform()
-  if (!plat) return
+  if (!plat) {
+    console.log('[push] unrecognized platform, skipping:', Capacitor.getPlatform())
+    return
+  }
+  console.log('[push] running on', plat)
 
   if (!listenersAttached) {
     listenersAttached = true
+    console.log('[push] attaching listeners')
 
     PushNotifications.addListener('registration', (token: Token) => {
+      console.log('[push] registration event received, token starts with', token.value.slice(0, 12))
       currentToken = token.value
-      registerPushToken(userId, token.value, plat).catch((err) => {
-        console.error('Failed to register push token', err)
-      })
+      registerPushToken(userId, token.value, plat)
+        .then(() => console.log('[push] registerPushToken saved to database successfully'))
+        .catch((err) => {
+          console.error('[push] Failed to register push token', err)
+        })
     })
 
     PushNotifications.addListener('registrationError', (err) => {
-      console.error('Push registration error', err)
+      console.error('[push] Push registration error', JSON.stringify(err))
     })
 
     // Foreground notifications: the OS doesn't show a banner automatically
@@ -46,24 +59,37 @@ export async function initPushNotifications(userId: string): Promise<void> {
     // logging - the in-app notification bell (already backed by Supabase
     // Realtime) is what covers the foreground case today.
     PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
-      console.log('Push received in foreground', notification)
+      console.log('[push] Push received in foreground', notification)
     })
 
     // User tapped a notification (app was backgrounded/closed). Nothing
     // beyond bringing the app forward is needed - the dashboard already
     // loads the current notification list on mount.
     PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
-      console.log('Push notification tapped', action.notification)
+      console.log('[push] Push notification tapped', action.notification)
     })
+  } else {
+    console.log('[push] listeners already attached from a previous call')
   }
 
-  let permStatus = await PushNotifications.checkPermissions()
-  if (permStatus.receive === 'prompt') {
-    permStatus = await PushNotifications.requestPermissions()
-  }
-  if (permStatus.receive !== 'granted') return
+  try {
+    let permStatus = await PushNotifications.checkPermissions()
+    console.log('[push] checkPermissions result:', permStatus.receive)
+    if (permStatus.receive === 'prompt') {
+      permStatus = await PushNotifications.requestPermissions()
+      console.log('[push] requestPermissions result:', permStatus.receive)
+    }
+    if (permStatus.receive !== 'granted') {
+      console.log('[push] permission not granted, stopping before register():', permStatus.receive)
+      return
+    }
 
-  await PushNotifications.register()
+    console.log('[push] calling PushNotifications.register()')
+    await PushNotifications.register()
+    console.log('[push] register() call completed without throwing (waiting for registration event)')
+  } catch (err) {
+    console.error('[push] Unexpected error during permission/register flow', err)
+  }
 }
 
 export async function clearPushToken(): Promise<void> {

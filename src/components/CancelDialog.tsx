@@ -4,9 +4,16 @@ interface Props {
   title: string
   onConfirm: (note: string) => Promise<void>
   onClose: () => void
+  // The app can't remove a calendar entry it added on the driver's behalf -
+  // "Add to calendar" is a one-way Google Calendar link / ICS download, not
+  // a real two-way integration - so when a driver cancels a ride they'd
+  // committed to, we remind them to remove it themselves. Only relevant for
+  // that direction: a requester cancelling their own request never had a
+  // calendar entry to begin with.
+  showCalendarReminder?: boolean
 }
 
-export default function CancelDialog({ title, onConfirm, onClose }: Props) {
+export default function CancelDialog({ title, onConfirm, onClose, showCalendarReminder }: Props) {
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -55,6 +62,11 @@ export default function CancelDialog({ title, onConfirm, onClose }: Props) {
             color: 'var(--text-primary)'
           }}
         />
+        {showCalendarReminder && (
+          <p className="hint" style={{ margin: '0 0 12px' }}>
+            If you added this to your calendar, remember to remove it too - we can't do that part for you.
+          </p>
+        )}
         <div style={{ display: 'flex', gap: 8 }}>
           <button style={{ flex: 1 }} onClick={onClose} disabled={loading}>
             Keep ride

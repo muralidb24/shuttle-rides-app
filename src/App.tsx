@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabaseClient'
 import { getProfile } from './lib/api'
 import { initPushNotifications } from './lib/push'
+import { initDeepLinks } from './lib/deeplink'
 import type { Profile } from './types'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -19,6 +20,13 @@ export default function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Registers the listener that catches the magic-link redirect on
+    // iOS/Android (shuttlerides://...) and hands the tokens to supabase-js -
+    // see src/lib/deeplink.ts. No-op on the web build. Must run before the
+    // user ever taps the sign-in link, so it's set up unconditionally here
+    // rather than waiting on a session/profile.
+    initDeepLinks()
+
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
       setLoading(false)
