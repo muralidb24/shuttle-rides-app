@@ -20,6 +20,11 @@
 # a first attempt at this script: `npm ci` alone failed with "command not
 # found", exit 127) - Homebrew is available though, so install Node via
 # brew first and link it onto PATH before touching npm.
+#
+# Node 20 was tried first and installed fine, but the Capacitor CLI (used
+# below via `cap sync ios`) requires Node >=22 and refused to run under 20
+# ("[fatal] The Capacitor CLI requires NodeJS >=22.0.0") - so this installs
+# 22 instead.
 set -e
 set -x
 
@@ -27,11 +32,18 @@ set -x
 # directories up.
 cd "$(dirname "$0")/../../.."
 
-if ! command -v node >/dev/null 2>&1; then
-  echo "ci_post_clone.sh: node not found, installing via Homebrew..."
+# Check for an existing node new enough (>=22), not just presence - a
+# stale/cached image with an older node on PATH should still trigger a
+# reinstall rather than silently reusing something too old.
+node_major=0
+if command -v node >/dev/null 2>&1; then
+  node_major=$(node -v | sed 's/^v//' | cut -d. -f1)
+fi
+if [ "$node_major" -lt 22 ]; then
+  echo "ci_post_clone.sh: node ${node_major:-missing} found, need >=22 - installing via Homebrew..."
   export HOMEBREW_NO_INSTALL_CLEANUP=TRUE
-  brew install node@20
-  brew link node@20 --force --overwrite
+  brew install node@22
+  brew link node@22 --force --overwrite
 fi
 
 node -v
