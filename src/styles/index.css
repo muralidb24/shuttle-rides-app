@@ -44,6 +44,13 @@
 
 * { box-sizing: border-box; }
 
+/* html/body get an explicit height so #root can size itself with a
+   percentage instead of a viewport unit - see the #root comment below for
+   why that distinction matters on iOS. */
+html, body {
+  height: 100%;
+}
+
 body {
   margin: 0;
   background: var(--surface-0);
@@ -56,7 +63,15 @@ body {
 #root {
   max-width: 480px;
   margin: 0 auto;
-  min-height: 100vh;
+  /* Deliberately a percentage, not 100vh. In a Capacitor iOS WKWebView
+     (notched devices especially), 100vh can be calculated from viewport
+     metrics that haven't settled yet on first launch, producing a
+     mis-sized layout that only corrects itself once something - like a
+     device rotation - forces WebKit to recompute (this is a known,
+     long-standing WKWebView bug, not specific to this app). Percentage
+     heights resolve through normal layout against the html/body chain
+     above instead, which doesn't hit that bug. */
+  min-height: 100%;
   background: var(--surface-1);
   /* On native iOS/Android, the app content renders full-screen behind the
      status bar/notch and the home-indicator area unless we push it in
