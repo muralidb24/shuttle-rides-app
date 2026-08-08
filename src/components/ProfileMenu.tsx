@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { UserRound, BookOpen, MessageCircle, LogOut, Mail, Users, Settings, MapPin } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import { updateEmailNotificationsEnabled } from '../lib/api'
@@ -83,7 +84,15 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
             zIndex: 10
           }}
         >
-          <a href="guide.html" target="_blank" rel="noopener noreferrer" className="menu-item">
+          {/* target="_blank" has no "new tab" to open into inside a native
+              WKWebView/Android WebView, so it silently does nothing there -
+              only use it on web, where it's a nice-to-have that keeps the
+              app itself open in its own tab. */}
+          <a
+            href="guide.html"
+            className="menu-item"
+            {...(Capacitor.isNativePlatform() ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+          >
             <BookOpen size={16} /> User guide
           </a>
           <a href="mailto:rides@postalcolony.com?subject=Ride%2C%20please%20app%20feedback" className="menu-item">

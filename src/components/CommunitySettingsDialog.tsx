@@ -179,11 +179,7 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
 
             {error && <p style={{ fontSize: 12, color: 'var(--danger, #d33)', margin: '0 0 8px' }}>{error}</p>}
 
-            <button className="primary" style={{ width: '100%', marginBottom: 18 }} onClick={handleSaveCommunity} disabled={busy}>
-              {busy ? 'Saving…' : 'Save'}
-            </button>
-
-            <p style={{ fontWeight: 500, fontSize: 13, margin: '0 0 8px' }}>Destinations</p>
+            <p style={{ fontWeight: 500, fontSize: 13, margin: '18px 0 8px' }}>Destinations</p>
             <p className="muted" style={{ fontSize: 12, margin: '0 0 8px' }}>
               These are the places members can request a ride to or from - add every stop your community regularly uses.
             </p>
@@ -275,7 +271,18 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
           </>
         )}
 
-        <button style={{ width: '100%', marginTop: 14 }} onClick={onClose}>
+        {!loading && (
+          <button
+            className="primary"
+            style={{ width: '100%', marginTop: 18, marginBottom: 8 }}
+            onClick={handleSaveCommunity}
+            disabled={busy}
+          >
+            {busy ? 'Saving…' : 'Save'}
+          </button>
+        )}
+
+        <button style={{ width: '100%' }} onClick={onClose}>
           Close
         </button>
       </div>
