@@ -358,3 +358,20 @@ export async function optOutOfReminders(offerId: string) {
   const { error } = await supabase.from('ride_offers').update({ reminder_opt_in: false }).eq('id', offerId)
   if (error) throw error
 }
+
+// --- Account deletion ----------------------------------------------------
+// Two steps, in order: first gracefully wind down anything the caller is
+// currently on the hook for (same cancel + notify + reopen behavior as a
+// manual cancel), then actually delete the auth account. The second step
+// can only happen server-side (it needs the service-role key), so it goes
+// through the delete-account edge function rather than a direct client
+// call - see supabase/functions/delete-account. Everything else the caller
+// owns (past ride history, push tokens, etc.) cleans up automatically via
+// the profiles -> auth.users ON DELETE CASCADE chain.
+export async function deleteMyAccount() {
+  const { error: prepError } = await supabase.rpc('prepare_account_for_deletion')
+  if (prepError) throw prepError
+
+  const { error: deleteError } = await supabase.functions.invoke('delete-account')
+  if (deleteError) throw deleteError
+}

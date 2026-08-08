@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Capacitor } from '@capacitor/core'
-import { UserRound, BookOpen, MessageCircle, LogOut, Mail, Users, Settings, MapPin } from 'lucide-react'
+import { UserRound, BookOpen, MessageCircle, LogOut, Mail, Users, Settings, MapPin, UserX } from 'lucide-react'
 import { supabase } from '../supabaseClient'
-import { updateEmailNotificationsEnabled } from '../lib/api'
+import { deleteMyAccount, updateEmailNotificationsEnabled } from '../lib/api'
 import { clearPushToken } from '../lib/push'
 import AudienceSettingsDialog from './AudienceSettingsDialog'
 import CommunitySettingsDialog from './CommunitySettingsDialog'
 import DefaultDestinationDialog from './DefaultDestinationDialog'
+import DeleteAccountDialog from './DeleteAccountDialog'
 import type { Profile, RequestAudienceMode } from '../types'
 
 interface Props {
@@ -25,6 +26,7 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
   const [audienceDialogOpen, setAudienceDialogOpen] = useState(false)
   const [communityDialogOpen, setCommunityDialogOpen] = useState(false)
   const [destinationDialogOpen, setDestinationDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -47,6 +49,16 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
     const next = !profile.email_notifications_enabled
     await updateEmailNotificationsEnabled(profile.id, next)
     onProfileChange({ ...profile, email_notifications_enabled: next })
+  }
+
+  async function handleDeleteAccount() {
+    await clearPushToken()
+    await deleteMyAccount()
+    // The account (and its server-side session) is already gone at this
+    // point - this just clears the locally-cached token so the app's own
+    // auth listener sees a signed-out state and returns to the login screen,
+    // the same way a normal sign-out does.
+    await supabase.auth.signOut()
   }
 
   return (
@@ -138,6 +150,16 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
           >
             <LogOut size={16} /> Sign out
           </button>
+          <button
+            className="menu-item"
+            style={{ color: 'var(--danger, #d33)' }}
+            onClick={() => {
+              setDeleteDialogOpen(true)
+              setOpen(false)
+            }}
+          >
+            <UserX size={16} /> Delete my account
+          </button>
         </div>
       )}
 
@@ -157,6 +179,10 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
           onClose={() => setDestinationDialogOpen(false)}
           onProfileChange={onProfileChange}
         />
+      )}
+
+      {deleteDialogOpen && (
+        <DeleteAccountDialog onConfirm={handleDeleteAccount} onClose={() => setDeleteDialogOpen(false)} />
       )}
     </div>
   )
