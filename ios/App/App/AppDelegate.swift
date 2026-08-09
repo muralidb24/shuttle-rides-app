@@ -45,32 +45,34 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // at this) did nothing: reassigning an unchanged value is a no-op
         // to WebKit.
         //
-        // Wait briefly for the page to finish its initial load, then
-        // actually change the webView's frame size before restoring it -
-        // with a real gap in between so a render pass happens at the
-        // in-between size - to give WebKit a genuine geometry change to
-        // react to, the same way a rotation would.
+        // A follow-up round of live testing ruled the frame-wiggle approach
+        // out too: even genuinely changing the webView's frame size (with a
+        // real render pass in between, not just reassigning the same
+        // value) had zero effect after waiting several seconds - while an
+        // actual device rotation, tested right after, fixed it instantly.
+        // That's a meaningful distinction: rotation and a frame change
+        // aren't the same event to WebKit. Rotation specifically posts
+        // UIDevice.orientationDidChangeNotification, which is what this
+        // targets instead - forcing that same notification without an
+        // actual physical rotation.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             self.nudgeWebViewLayout()
         }
     }
 
+    // UIDevice doesn't expose a public method to trigger a fake orientation
+    // change directly, but setting its "orientation" property via KVC - a
+    // long-standing, widely used technique for exactly this, not a private
+    // API call - posts the same notification a genuine rotation does.
+    // Detouring through a different orientation first (rather than setting
+    // .portrait directly) matters, since every "same value" attempt so far
+    // (frame reassignment, this) has turned out to be a no-op to WebKit -
+    // only an actual *change* triggers anything.
     private func nudgeWebViewLayout() {
-        guard let bridgeVC = window?.rootViewController as? CAPBridgeViewController,
-              let webView = bridgeVC.webView else { return }
-
-        let correctFrame = bridgeVC.view.bounds
-        var nudgedFrame = correctFrame
-        nudgedFrame.size.height -= 1
-        webView.frame = nudgedFrame
-        webView.setNeedsLayout()
-        webView.layoutIfNeeded()
-
+        UIDevice.current.beginGeneratingDeviceOrientationNotifications()
+        UIDevice.current.setValue(UIDeviceOrientation.landscapeLeft.rawValue, forKey: "orientation")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            webView.frame = correctFrame
-            webView.setNeedsLayout()
-            webView.layoutIfNeeded()
-            webView.evaluateJavaScript("window.dispatchEvent(new Event('resize'))", completionHandler: nil)
+            UIDevice.current.setValue(UIDeviceOrientation.portrait.rawValue, forKey: "orientation")
         }
     }
 
