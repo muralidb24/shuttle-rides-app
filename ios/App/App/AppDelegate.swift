@@ -6,9 +6,39 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
+    private var launchCurtain: UIView?
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+
+        // Cover the screen with the same image as the native launch screen,
+        // as early as possible, so the orientation-cycle fix triggered in
+        // applicationDidBecomeActive below happens out of sight - otherwise
+        // the app's real content briefly, visibly rotates on every launch,
+        // which looks broken even though it's fixing something.
+        showLaunchCurtain()
         return true
+    }
+
+    private func showLaunchCurtain() {
+        guard let window = window, launchCurtain == nil else { return }
+        let curtain = UIImageView(image: UIImage(named: "Splash"))
+        curtain.contentMode = .scaleAspectFill
+        curtain.backgroundColor = .white
+        curtain.frame = window.bounds
+        curtain.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        window.addSubview(curtain)
+        launchCurtain = curtain
+    }
+
+    private func hideLaunchCurtain() {
+        guard let curtain = launchCurtain else { return }
+        launchCurtain = nil
+        UIView.animate(withDuration: 0.2, animations: {
+            curtain.alpha = 0
+        }, completion: { _ in
+            curtain.removeFromSuperview()
+        })
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
@@ -67,25 +97,43 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //
         // This requests that transition for real, through Apple's official
         // API for it, replicating the exact landscape-then-portrait
-        // sequence confirmed to work by hand.
+        // sequence confirmed to work by hand - hidden behind the curtain
+        // set up in didFinishLaunchingWithOptions above.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             if #available(iOS 16.0, *) {
                 self.performOrientationCycle()
+            } else {
+                self.hideLaunchCurtain()
             }
+        }
+
+        // Safety net: whatever happens above (the orientation request
+        // failing, the window scene not being ready, some future edge
+        // case), never leave the curtain up indefinitely - hideLaunchCurtain
+        // is a no-op if it's already been taken down by then.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            self.hideLaunchCurtain()
         }
     }
 
     @available(iOS 16.0, *)
     private func performOrientationCycle() {
-        guard let windowScene = window?.windowScene else { return }
+        guard let windowScene = window?.windowScene else {
+            hideLaunchCurtain()
+            return
+        }
         windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight)) { _ in
             // Best-effort - if the device can't satisfy landscape for some
             // reason, there's nothing more useful to do than leave the
             // layout as-is; the user's existing rotate/relaunch workaround
-            // still applies.
+            // still applies. The 1.5s safety net above still takes the
+            // curtain down either way.
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait)) { _ in }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                self.hideLaunchCurtain()
+            }
         }
     }
 
