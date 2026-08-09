@@ -99,20 +99,47 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // API for it, replicating the exact landscape-then-portrait
         // sequence confirmed to work by hand - hidden behind the curtain
         // set up in didFinishLaunchingWithOptions above.
+        //
+        // In practice this bug only ever shows up on a genuinely fresh
+        // WKWebView (a first-ever launch after install, or right after
+        // signing out) - most launches happen into an already-correct
+        // layout left over from a previous fix. Running the full curtain
+        // + rotation cycle unconditionally on *every* launch made even
+        // those already-fine launches feel slower, which is worse than the
+        // bug itself for most real usage. So check first, cheaply, and
+        // only pay for the disruptive fix on the rare launches that
+        // actually need it.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            if #available(iOS 16.0, *) {
-                self.performOrientationCycle()
-            } else {
-                self.hideLaunchCurtain()
-            }
+            self.checkAndFixLayoutIfNeeded()
         }
 
-        // Safety net: whatever happens above (the orientation request
+        // Safety net: whatever happens above (the check/orientation request
         // failing, the window scene not being ready, some future edge
         // case), never leave the curtain up indefinitely - hideLaunchCurtain
         // is a no-op if it's already been taken down by then.
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             self.hideLaunchCurtain()
+        }
+    }
+
+    private func checkAndFixLayoutIfNeeded() {
+        guard let bridgeVC = window?.rootViewController as? CAPBridgeViewController,
+              let webView = bridgeVC.webView else {
+            hideLaunchCurtain()
+            return
+        }
+        // A small tolerance rather than an exact match, so this doesn't
+        // false-positive on trivial rounding differences.
+        webView.evaluateJavaScript(
+            "window.innerWidth < screen.width - 5 || window.innerHeight < screen.height - 5"
+        ) { [weak self] result, _ in
+            guard let self = self else { return }
+            let needsFix = (result as? Bool) ?? false
+            if needsFix, #available(iOS 16.0, *) {
+                self.performOrientationCycle()
+            } else {
+                self.hideLaunchCurtain()
+            }
         }
     }
 
