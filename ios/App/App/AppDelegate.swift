@@ -30,24 +30,47 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // WKWebView occasionally finishes its very first layout pass with
         // its internal viewport bookkeeping (window.innerWidth/innerHeight)
-        // reporting a smaller size than the device's actual screen, even
+        // stuck at a smaller size than the device's actual screen, even
         // though the DOM itself (document.documentElement, #root) is
         // correctly laid out to the full screen - confirmed live via Safari
-        // Web Inspector on an affected launch. Content positioned near the
-        // bottom/edges of the page ends up outside that shrunken viewport
-        // and becomes unreachable, until something forces WebKit to redo
-        // that bookkeeping - which is exactly what rotating the device or
-        // relaunching the app were doing by accident.
+        // Web Inspector against a real, reproduced case. Also confirmed
+        // live: neither dispatching a synthetic JS 'resize' event, nor
+        // toggling the viewport meta tag's content, nor even a full in-page
+        // reload (location.reload()) budges those numbers at all - so
+        // whatever's stale lives inside the WKWebView instance itself,
+        // outside anything the page's own JS can reach or reset. Only
+        // rotating the device or fully relaunching the app - both genuine
+        // geometry changes - fixed it by hand, which is also why a plain
+        // `webView.frame = <the frame it already has>` (an earlier attempt
+        // at this) did nothing: reassigning an unchanged value is a no-op
+        // to WebKit.
         //
-        // Dispatching a resize event ourselves, every time the app becomes
-        // active (covers both a fresh launch and returning from the
-        // background), reproduces that same resync automatically. This
-        // works directly against Capacitor's own root view controller and
-        // its webView, so it doesn't require subclassing or touching
-        // Main.storyboard at all.
-        if let bridgeVC = window?.rootViewController as? CAPBridgeViewController {
-            bridgeVC.webView?.frame = bridgeVC.view.bounds
-            bridgeVC.webView?.evaluateJavaScript("window.dispatchEvent(new Event('resize'))", completionHandler: nil)
+        // Wait briefly for the page to finish its initial load, then
+        // actually change the webView's frame size before restoring it -
+        // with a real gap in between so a render pass happens at the
+        // in-between size - to give WebKit a genuine geometry change to
+        // react to, the same way a rotation would.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.nudgeWebViewLayout()
+        }
+    }
+
+    private func nudgeWebViewLayout() {
+        guard let bridgeVC = window?.rootViewController as? CAPBridgeViewController,
+              let webView = bridgeVC.webView else { return }
+
+        let correctFrame = bridgeVC.view.bounds
+        var nudgedFrame = correctFrame
+        nudgedFrame.size.height -= 1
+        webView.frame = nudgedFrame
+        webView.setNeedsLayout()
+        webView.layoutIfNeeded()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            webView.frame = correctFrame
+            webView.setNeedsLayout()
+            webView.layoutIfNeeded()
+            webView.evaluateJavaScript("window.dispatchEvent(new Event('resize'))", completionHandler: nil)
         }
     }
 
