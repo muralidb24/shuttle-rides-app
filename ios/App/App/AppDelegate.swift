@@ -51,28 +51,41 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // value) had zero effect after waiting several seconds - while an
         // actual device rotation, tested right after, fixed it instantly.
         // That's a meaningful distinction: rotation and a frame change
-        // aren't the same event to WebKit. Rotation specifically posts
-        // UIDevice.orientationDidChangeNotification, which is what this
-        // targets instead - forcing that same notification without an
-        // actual physical rotation.
+        // aren't the same event to WebKit.
+        //
+        // A third round of live testing (listening for the 'resize' event
+        // and logging window.innerWidth/innerHeight through an actual
+        // rotate-to-landscape-and-back) turned up something more specific
+        // still: rotating to landscape alone did NOT produce correct
+        // numbers - it just reported the same stale portrait numbers with
+        // width/height swapped. Only rotating back to portrait afterward
+        // produced the genuinely correct values. Faking the sensor-level
+        // UIDevice.orientation via KVC (the previous attempt) didn't
+        // reproduce this at all, which means WebKit's viewport
+        // recalculation is tied to the real *interface* orientation
+        // transition (UIWindowScene), not the device sensor.
+        //
+        // This requests that transition for real, through Apple's official
+        // API for it, replicating the exact landscape-then-portrait
+        // sequence confirmed to work by hand.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.nudgeWebViewLayout()
+            if #available(iOS 16.0, *) {
+                self.performOrientationCycle()
+            }
         }
     }
 
-    // UIDevice doesn't expose a public method to trigger a fake orientation
-    // change directly, but setting its "orientation" property via KVC - a
-    // long-standing, widely used technique for exactly this, not a private
-    // API call - posts the same notification a genuine rotation does.
-    // Detouring through a different orientation first (rather than setting
-    // .portrait directly) matters, since every "same value" attempt so far
-    // (frame reassignment, this) has turned out to be a no-op to WebKit -
-    // only an actual *change* triggers anything.
-    private func nudgeWebViewLayout() {
-        UIDevice.current.beginGeneratingDeviceOrientationNotifications()
-        UIDevice.current.setValue(UIDeviceOrientation.landscapeLeft.rawValue, forKey: "orientation")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            UIDevice.current.setValue(UIDeviceOrientation.portrait.rawValue, forKey: "orientation")
+    @available(iOS 16.0, *)
+    private func performOrientationCycle() {
+        guard let windowScene = window?.windowScene else { return }
+        windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight)) { _ in
+            // Best-effort - if the device can't satisfy landscape for some
+            // reason, there's nothing more useful to do than leave the
+            // layout as-is; the user's existing rotate/relaunch workaround
+            // still applies.
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait)) { _ in }
         }
     }
 
