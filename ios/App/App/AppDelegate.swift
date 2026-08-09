@@ -27,6 +27,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+
+        // WKWebView occasionally finishes its very first layout pass with
+        // its internal viewport bookkeeping (window.innerWidth/innerHeight)
+        // reporting a smaller size than the device's actual screen, even
+        // though the DOM itself (document.documentElement, #root) is
+        // correctly laid out to the full screen - confirmed live via Safari
+        // Web Inspector on an affected launch. Content positioned near the
+        // bottom/edges of the page ends up outside that shrunken viewport
+        // and becomes unreachable, until something forces WebKit to redo
+        // that bookkeeping - which is exactly what rotating the device or
+        // relaunching the app were doing by accident.
+        //
+        // Dispatching a resize event ourselves, every time the app becomes
+        // active (covers both a fresh launch and returning from the
+        // background), reproduces that same resync automatically. This
+        // works directly against Capacitor's own root view controller and
+        // its webView, so it doesn't require subclassing or touching
+        // Main.storyboard at all.
+        if let bridgeVC = window?.rootViewController as? CAPBridgeViewController {
+            bridgeVC.webView?.frame = bridgeVC.view.bounds
+            bridgeVC.webView?.evaluateJavaScript("window.dispatchEvent(new Event('resize'))", completionHandler: nil)
+        }
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
