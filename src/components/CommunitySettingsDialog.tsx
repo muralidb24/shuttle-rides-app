@@ -261,9 +261,14 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
                     {m.role === 'admin' ? 'Admin' : 'Member'}
                   </span>
                 </span>
-                {m.id !== profile.id && (
+                {/* Everyone is an admin by default now, and admin access can
+                    only ever be granted here, never taken away - removing
+                    someone's admin access was a rarely-used capability that
+                    mainly created a way to accidentally (or not) lock a
+                    neighbor out of managing the community they're part of. */}
+                {m.id !== profile.id && m.role !== 'admin' && (
                   <button style={{ fontSize: 12 }} onClick={() => handleRoleToggle(m)} disabled={busy}>
-                    {m.role === 'admin' ? 'Remove admin' : 'Make admin'}
+                    Make admin
                   </button>
                 )}
               </div>
