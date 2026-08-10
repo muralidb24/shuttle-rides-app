@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>User guide - Ride, please!</title>
     <style>
       :root {
@@ -33,7 +33,11 @@
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         line-height: 1.6;
       }
-      .wrap { max-width: 640px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+      /* padding-top combines the usual spacing with the notch/status-bar
+         safe area - without viewport-fit=cover above, env() here would
+         just evaluate to 0 and do nothing. Same treatment the main app's
+         #root already gets, just missed on this standalone page. */
+      .wrap { max-width: 640px; margin: 0 auto; padding: calc(2rem + env(safe-area-inset-top)) 1.25rem 4rem; }
       h1 { font-size: 22px; font-weight: 500; margin: 0 0 4px; }
       .subtitle { color: var(--text-secondary); font-size: 14px; margin: 0 0 28px; }
       h2 { font-size: 16px; font-weight: 500; margin: 28px 0 8px; display: flex; align-items: center; gap: 8px; }
