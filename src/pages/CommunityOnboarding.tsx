@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { UserRound, Users } from 'lucide-react'
 import { createCommunityAndJoin, joinCommunity, lookupCommunityByCode } from '../lib/api'
 import type { Profile } from '../types'
@@ -40,6 +41,7 @@ export default function CommunityOnboarding({ onDone }: Props) {
   const [newJoinCode, setNewJoinCode] = useState('')
 
   const [fullName, setFullName] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -79,14 +81,14 @@ export default function CommunityOnboarding({ onDone }: Props) {
 
   async function handleNameSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!fullName.trim()) return
+    if (!fullName.trim() || !termsAccepted) return
     setLoading(true)
     setError(null)
     try {
       const profile =
         pendingAction === 'join'
-          ? await joinCommunity(joinCode, fullName)
-          : await createCommunityAndJoin(communityName, newJoinCode, fullName)
+          ? await joinCommunity(joinCode, fullName, termsAccepted)
+          : await createCommunityAndJoin(communityName, newJoinCode, fullName, termsAccepted)
       onDone(profile)
     } catch (err) {
       const message = err instanceof Error ? err.message : ''
@@ -229,8 +231,34 @@ export default function CommunityOnboarding({ onDone }: Props) {
           onChange={(e) => setFullName(e.target.value)}
           style={{ marginBottom: 10 }}
         />
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 8,
+            fontSize: 12.5,
+            color: 'var(--text-secondary)',
+            marginBottom: 14,
+            cursor: 'pointer'
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            style={{ marginTop: 2, flexShrink: 0 }}
+          />
+          <span>
+            I've read and agree to the{' '}
+            <a href="terms.html" {...(Capacitor.isNativePlatform() ? {} : { target: '_blank', rel: 'noopener noreferrer' })}>
+              Terms of Use
+            </a>
+            , including that rides are arranged directly between neighbors and the app isn't responsible for delays,
+            missed flights, accidents, or notifications that don't arrive.
+          </span>
+        </label>
         {error && <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 0 }}>{error}</p>}
-        <button className="primary" type="submit" disabled={loading} style={{ width: '100%' }}>
+        <button className="primary" type="submit" disabled={loading || !termsAccepted} style={{ width: '100%' }}>
           {loading ? 'Saving…' : 'Continue'}
         </button>
       </form>

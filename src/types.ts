@@ -32,6 +32,7 @@ export interface Profile {
   community_id: string
   role: MemberRole
   default_destination_id: string | null
+  terms_accepted_at: string | null
   created_at: string
 }
 

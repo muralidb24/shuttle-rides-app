@@ -31,21 +31,28 @@ export async function lookupCommunityByCode(code: string): Promise<{ id: string;
   return row ?? null
 }
 
-export async function joinCommunity(joinCode: string, fullName: string): Promise<Profile> {
+export async function joinCommunity(joinCode: string, fullName: string, termsAccepted: boolean): Promise<Profile> {
   const { data, error } = await supabase.rpc('join_community', {
     p_join_code: joinCode.trim(),
-    p_full_name: fullName.trim()
+    p_full_name: fullName.trim(),
+    p_terms_accepted: termsAccepted
   })
   if (error) throw error
   const row = Array.isArray(data) ? data[0] : data
   return row as Profile
 }
 
-export async function createCommunityAndJoin(name: string, joinCode: string, fullName: string): Promise<Profile> {
+export async function createCommunityAndJoin(
+  name: string,
+  joinCode: string,
+  fullName: string,
+  termsAccepted: boolean
+): Promise<Profile> {
   const { data, error } = await supabase.rpc('create_community_and_join', {
     p_name: name.trim(),
     p_join_code: joinCode.trim(),
-    p_full_name: fullName.trim()
+    p_full_name: fullName.trim(),
+    p_terms_accepted: termsAccepted
   })
   if (error) throw error
   const row = Array.isArray(data) ? data[0] : data
