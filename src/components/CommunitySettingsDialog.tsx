@@ -255,11 +255,11 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
                   borderBottom: '0.5px solid var(--border)'
                 }}
               >
+                {/* No per-member role tag here anymore - now that everyone
+                    is an admin by default, an "Admin" label next to every
+                    single name would just be noise. */}
                 <span>
                   {m.full_name} {m.id === profile.id && <span className="muted">(you)</span>}
-                  <span className="muted" style={{ display: 'block', fontSize: 11 }}>
-                    {m.role === 'admin' ? 'Admin' : 'Member'}
-                  </span>
                 </span>
                 {/* Everyone is an admin by default now, and admin access can
                     only ever be granted here, never taken away - removing
