@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Capacitor } from '@capacitor/core'
-import { UserRound, BookOpen, MessageCircle, LogOut, Mail, Users, Settings, MapPin, UserX } from 'lucide-react'
+import { UserRound, BookOpen, FileText, MessageCircle, LogOut, Mail, Users, Settings, MapPin, UserX } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import { deleteMyAccount, updateEmailNotificationsEnabled } from '../lib/api'
 import { clearPushToken } from '../lib/push'
@@ -106,6 +106,13 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
             {...(Capacitor.isNativePlatform() ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
           >
             <BookOpen size={16} /> User guide
+          </a>
+          <a
+            href="terms.html"
+            className="menu-item"
+            {...(Capacitor.isNativePlatform() ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+          >
+            <FileText size={16} /> Terms of use
           </a>
           <a href="mailto:rides@postalcolony.com?subject=Ride%2C%20please%20app%20feedback" className="menu-item">
             <MessageCircle size={16} /> Send feedback
