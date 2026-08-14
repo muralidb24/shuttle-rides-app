@@ -75,7 +75,7 @@ export default function CalendarSyncDialog({ profile, onClose, onProfileChange }
             borderRadius: 'var(--radius)',
             padding: 10,
             fontFamily: 'inherit',
-            fontSize: 13,
+            fontSize: 16,
             marginBottom: 8,
             background: 'var(--surface-2)',
             color: 'var(--text-primary)'

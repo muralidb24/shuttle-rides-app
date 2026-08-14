@@ -55,7 +55,7 @@ export default function CancelDialog({ title, onConfirm, onClose, showCalendarRe
             borderRadius: 'var(--radius)',
             padding: 10,
             fontFamily: 'inherit',
-            fontSize: 13,
+            fontSize: 16,
             marginBottom: 12,
             resize: 'vertical',
             background: 'var(--surface-2)',

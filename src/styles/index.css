@@ -81,9 +81,23 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-input, select, button {
+input, select, textarea, button {
   font-family: inherit;
   font-size: 14px;
+}
+
+/* iOS Safari/WKWebView auto-zooms the whole page when a focused
+   text-entry element's font-size is under 16px - a well-documented
+   platform quirk, not specific to this app. That zoom is itself a
+   viewport-scale change, and combined with the known WKWebView
+   viewport-recompute bug noted on #root above, can leave the page
+   visibly mis-sized (extending past the screen) once the keyboard
+   closes. Keeping every text-entry element at 16px+ avoids ever
+   triggering that zoom in the first place. Buttons never trigger it
+   (no text cursor/keyboard involved), so they stay at the smaller
+   size set above. */
+input, select, textarea {
+  font-size: 16px;
 }
 
 input[type="email"], input[type="date"], input[type="time"], input[type="text"] {

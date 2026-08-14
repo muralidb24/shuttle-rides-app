@@ -202,7 +202,7 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
                       type="text"
                       value={editingDestinationName}
                       onChange={(e) => setEditingDestinationName(e.target.value)}
-                      style={{ flex: 1, fontSize: 13 }}
+                      style={{ flex: 1, fontSize: 16 }}
                     />
                     <button style={{ fontSize: 12 }} onClick={handleSaveRenameDestination} disabled={busy}>
                       Save
@@ -232,7 +232,7 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
                 placeholder="Add a destination"
                 value={newDestinationName}
                 onChange={(e) => setNewDestinationName(e.target.value)}
-                style={{ flex: 1, fontSize: 13 }}
+                style={{ flex: 1, fontSize: 16 }}
               />
               <button style={{ fontSize: 12 }} onClick={handleAddDestination} disabled={busy || !newDestinationName.trim()}>
                 Add
