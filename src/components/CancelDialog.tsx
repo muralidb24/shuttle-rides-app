@@ -40,8 +40,8 @@ export default function CancelDialog({ title, onConfirm, onClose, showCalendarRe
       }}
     >
       <div className="card" style={{ width: '100%', maxWidth: 360 }}>
-        <p style={{ fontWeight: 500, fontSize: 15, margin: '0 0 4px' }}>{title}</p>
-        <p className="muted" style={{ fontSize: 13, margin: '0 0 10px' }}>
+        <p style={{ fontWeight: 500, fontSize: 16, margin: '0 0 4px' }}>{title}</p>
+        <p className="muted" style={{ fontSize: 14, margin: '0 0 10px' }}>
           Let them know why, or just leave a quick note - totally optional.
         </p>
         <textarea
@@ -55,7 +55,7 @@ export default function CancelDialog({ title, onConfirm, onClose, showCalendarRe
             borderRadius: 'var(--radius)',
             padding: 10,
             fontFamily: 'inherit',
-            fontSize: 16,
+            fontSize: 17,
             marginBottom: 12,
             resize: 'vertical',
             background: 'var(--surface-2)',

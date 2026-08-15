@@ -57,7 +57,7 @@ export default function RequestRide({ userId, defaultDestinationId, onCreated, o
 
   return (
     <div style={{ padding: '1.5rem 1.25rem' }}>
-      <p style={{ fontWeight: 500, fontSize: 15, margin: '0 0 14px' }}>Request a ride</p>
+      <p style={{ fontWeight: 500, fontSize: 16, margin: '0 0 14px' }}>Request a ride</p>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: 12 }}>
           <DirectionToggle value={direction} onChange={setDirection} />
@@ -74,7 +74,7 @@ export default function RequestRide({ userId, defaultDestinationId, onCreated, o
             Loading destinations…
           </p>
         ) : destinations.length === 0 ? (
-          <p style={{ color: 'var(--danger)', fontSize: 12, margin: '0 0 16px' }}>
+          <p style={{ color: 'var(--danger)', fontSize: 13, margin: '0 0 16px' }}>
             Your community hasn't set up any destinations yet. Ask an admin to add one under Community settings before
             requesting a ride.
           </p>
@@ -105,7 +105,7 @@ export default function RequestRide({ userId, defaultDestinationId, onCreated, o
           style={{ marginBottom: 16 }}
         />
 
-        {error && <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 0 }}>{error}</p>}
+        {error && <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 0 }}>{error}</p>}
 
         <button
           className="primary"

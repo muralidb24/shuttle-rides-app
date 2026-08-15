@@ -17,7 +17,7 @@ export default function PendingAskCard({ offer, calendarIntegrated, onAccept, on
   return (
     <div className="card" style={{ marginBottom: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14 }}>
           <UserRound size={14} /> {requesterName}
         </span>
         <span className={`badge ${calendarIntegrated ? 'success' : 'neutral'}`}>
@@ -41,12 +41,12 @@ export default function PendingAskCard({ offer, calendarIntegrated, onAccept, on
 
       {calendarIntegrated ? (
         <>
-          <button className="primary" style={{ width: '100%', fontSize: 13, marginBottom: 8 }} disabled={busy} onClick={() => onAccept(offer.id)}>
+          <button className="primary" style={{ width: '100%', fontSize: 14, marginBottom: 8 }} disabled={busy} onClick={() => onAccept(offer.id)}>
             Offer to give a ride
           </button>
           <button
             className="ghost"
-            style={{ width: '100%', fontSize: 12, height: 'auto', padding: '2px 0', color: 'var(--text-secondary)' }}
+            style={{ width: '100%', fontSize: 13, height: 'auto', padding: '2px 0', color: 'var(--text-secondary)' }}
             disabled={busy}
             onClick={() => onDecline(offer.id)}
           >
@@ -55,12 +55,12 @@ export default function PendingAskCard({ offer, calendarIntegrated, onAccept, on
         </>
       ) : (
         <>
-          <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 8px' }}>Available and willing to give a ride?</p>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 8px' }}>Available and willing to give a ride?</p>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ flex: 1, fontSize: 13 }} disabled={busy} onClick={() => onAccept(offer.id)}>
+            <button style={{ flex: 1, fontSize: 14 }} disabled={busy} onClick={() => onAccept(offer.id)}>
               I can help
             </button>
-            <button style={{ flex: 1, fontSize: 13 }} disabled={busy} onClick={() => onDecline(offer.id)}>
+            <button style={{ flex: 1, fontSize: 14 }} disabled={busy} onClick={() => onDecline(offer.id)}>
               Not available
             </button>
           </div>

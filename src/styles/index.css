@@ -56,7 +56,7 @@ body {
   background: var(--surface-0);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1.5;
 }
 
@@ -83,7 +83,7 @@ body {
 
 input, select, textarea, button {
   font-family: inherit;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 /* iOS Safari/WKWebView auto-zooms the whole page when a focused
@@ -97,7 +97,7 @@ input, select, textarea, button {
    (no text cursor/keyboard involved), so they stay at the smaller
    size set above. */
 input, select, textarea {
-  font-size: 16px;
+  font-size: 17px;
 }
 
 input[type="email"], input[type="date"], input[type="time"], input[type="text"] {
@@ -142,17 +142,17 @@ button.ghost {
 }
 
 .label {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   margin: 0 0 4px;
 }
 
 .muted { color: var(--text-secondary); }
-.hint { color: var(--text-muted); font-size: 12px; }
+.hint { color: var(--text-muted); font-size: 13px; }
 
 .badge {
   display: inline-block;
-  font-size: 11px;
+  font-size: 12px;
   padding: 2px 8px;
   border-radius: var(--radius);
 }
@@ -181,12 +181,12 @@ button.ghost {
   flex-shrink: 0;
 }
 .ride-card-body { flex: 1; min-width: 0; }
-.ride-card-title { font-size: 13px; margin: 0; }
+.ride-card-title { font-size: 14px; margin: 0; }
 .ride-card-meta {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   margin-top: 2px;
 }
@@ -206,7 +206,7 @@ button.ghost {
   border: none;
   background: transparent;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 14px;
 }
 .tabs button.active { background: var(--bg-accent); color: var(--text-accent); }
 
@@ -214,7 +214,7 @@ button.ghost {
   text-align: center;
   padding: 28px 12px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .menu-item {
@@ -222,7 +222,7 @@ button.ghost {
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  font-size: 13px;
+  font-size: 14px;
   border-radius: var(--radius);
   color: var(--text-primary);
   text-decoration: none;

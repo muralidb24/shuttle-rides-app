@@ -115,7 +115,7 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
   return (
     <div style={{ padding: '1.5rem 1.25rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <span style={{ fontWeight: 500, fontSize: 15 }}>Hi, {profile.full_name.split(' ')[0]}</span>
+        <span style={{ fontWeight: 500, fontSize: 16 }}>Hi, {profile.full_name.split(' ')[0]}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <NotificationBell userId={profile.id} />
           <ProfileMenu profile={profile} onProfileChange={onProfileChange} />
@@ -127,7 +127,7 @@ export default function Dashboard({ profile, onRequestRide, onProfileChange }: P
         style={{
           padding: 0,
           height: 'auto',
-          fontSize: 12,
+          fontSize: 13,
           color: 'var(--text-secondary)',
           marginBottom: 16,
           display: 'flex',

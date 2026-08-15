@@ -74,7 +74,7 @@ export default function ProfileMenu({ profile, onProfileChange }: Props) {
           background: 'var(--bg-accent)',
           color: 'var(--text-accent)',
           border: 'none',
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: 500,
           display: 'flex',
           alignItems: 'center',

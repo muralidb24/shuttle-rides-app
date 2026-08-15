@@ -49,7 +49,7 @@ export default function RideCard({
           )}
         </div>
         {confirmedContact ? (
-          <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--success, #1a9e5c)', margin: '2px 0 0' }}>
+          <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--success, #1a9e5c)', margin: '2px 0 0' }}>
             <CheckCircle2 size={13} />
             <span style={{ color: 'var(--text-secondary)' }}>
               {confirmedContact.name} ({confirmedContact.email})
@@ -65,7 +65,7 @@ export default function RideCard({
         {contact && (
           <a
             href={`mailto:${contact.email}`}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-accent)', marginTop: 4 }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--text-accent)', marginTop: 4 }}
           >
             <Mail size={12} /> Contact {contact.name.split(' ')[0]}
           </a>

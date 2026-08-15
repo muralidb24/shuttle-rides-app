@@ -154,20 +154,20 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
       }}
     >
       <div className="card" style={{ width: '100%', maxWidth: 440, maxHeight: '85vh', overflowY: 'auto' }}>
-        <p style={{ fontWeight: 500, fontSize: 15, margin: '0 0 12px' }}>Community settings</p>
+        <p style={{ fontWeight: 500, fontSize: 16, margin: '0 0 12px' }}>Community settings</p>
 
         {loading ? (
-          <p className="muted" style={{ fontSize: 13 }}>
+          <p className="muted" style={{ fontSize: 14 }}>
             Loading…
           </p>
         ) : (
           <>
-            <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>
+            <label style={{ display: 'block', fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>
               Community name
             </label>
             <input type="text" value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%', marginBottom: 10 }} />
 
-            <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>
+            <label style={{ display: 'block', fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>
               Join code (share with neighbors)
             </label>
             <input
@@ -177,10 +177,10 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
               style={{ width: '100%', marginBottom: 10 }}
             />
 
-            {error && <p style={{ fontSize: 12, color: 'var(--danger, #d33)', margin: '0 0 8px' }}>{error}</p>}
+            {error && <p style={{ fontSize: 13, color: 'var(--danger, #d33)', margin: '0 0 8px' }}>{error}</p>}
 
-            <p style={{ fontWeight: 500, fontSize: 13, margin: '18px 0 8px' }}>Destinations</p>
-            <p className="muted" style={{ fontSize: 12, margin: '0 0 8px' }}>
+            <p style={{ fontWeight: 500, fontSize: 14, margin: '18px 0 8px' }}>Destinations</p>
+            <p className="muted" style={{ fontSize: 13, margin: '0 0 8px' }}>
               These are the places members can request a ride to or from - add every stop your community regularly uses.
             </p>
             {destinations.map((d) => (
@@ -191,7 +191,7 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   padding: '6px 0',
-                  fontSize: 13,
+                  fontSize: 14,
                   borderBottom: '0.5px solid var(--border)',
                   gap: 8
                 }}
@@ -202,12 +202,12 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
                       type="text"
                       value={editingDestinationName}
                       onChange={(e) => setEditingDestinationName(e.target.value)}
-                      style={{ flex: 1, fontSize: 16 }}
+                      style={{ flex: 1, fontSize: 17 }}
                     />
-                    <button style={{ fontSize: 12 }} onClick={handleSaveRenameDestination} disabled={busy}>
+                    <button style={{ fontSize: 13 }} onClick={handleSaveRenameDestination} disabled={busy}>
                       Save
                     </button>
-                    <button style={{ fontSize: 12 }} onClick={() => setEditingDestinationId(null)} disabled={busy}>
+                    <button style={{ fontSize: 13 }} onClick={() => setEditingDestinationId(null)} disabled={busy}>
                       Cancel
                     </button>
                   </>
@@ -215,10 +215,10 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
                   <>
                     <span>{d.name}</span>
                     <span style={{ display: 'flex', gap: 6 }}>
-                      <button style={{ fontSize: 12 }} onClick={() => startRenameDestination(d)} disabled={busy}>
+                      <button style={{ fontSize: 13 }} onClick={() => startRenameDestination(d)} disabled={busy}>
                         Rename
                       </button>
-                      <button style={{ fontSize: 12 }} onClick={() => handleDeleteDestination(d)} disabled={busy}>
+                      <button style={{ fontSize: 13 }} onClick={() => handleDeleteDestination(d)} disabled={busy}>
                         Delete
                       </button>
                     </span>
@@ -232,17 +232,17 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
                 placeholder="Add a destination"
                 value={newDestinationName}
                 onChange={(e) => setNewDestinationName(e.target.value)}
-                style={{ flex: 1, fontSize: 16 }}
+                style={{ flex: 1, fontSize: 17 }}
               />
-              <button style={{ fontSize: 12 }} onClick={handleAddDestination} disabled={busy || !newDestinationName.trim()}>
+              <button style={{ fontSize: 13 }} onClick={handleAddDestination} disabled={busy || !newDestinationName.trim()}>
                 Add
               </button>
             </div>
             {destinationError && (
-              <p style={{ fontSize: 12, color: 'var(--danger, #d33)', margin: '0 0 8px' }}>{destinationError}</p>
+              <p style={{ fontSize: 13, color: 'var(--danger, #d33)', margin: '0 0 8px' }}>{destinationError}</p>
             )}
 
-            <p style={{ fontWeight: 500, fontSize: 13, margin: '18px 0 8px' }}>Members</p>
+            <p style={{ fontWeight: 500, fontSize: 14, margin: '18px 0 8px' }}>Members</p>
             {members.map((m) => (
               <div
                 key={m.id}
@@ -251,7 +251,7 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   padding: '6px 0',
-                  fontSize: 13,
+                  fontSize: 14,
                   borderBottom: '0.5px solid var(--border)'
                 }}
               >
@@ -267,7 +267,7 @@ export default function CommunitySettingsDialog({ profile, onClose }: Props) {
                     mainly created a way to accidentally (or not) lock a
                     neighbor out of managing the community they're part of. */}
                 {m.id !== profile.id && m.role !== 'admin' && (
-                  <button style={{ fontSize: 12 }} onClick={() => handleRoleToggle(m)} disabled={busy}>
+                  <button style={{ fontSize: 13 }} onClick={() => handleRoleToggle(m)} disabled={busy}>
                     Make admin
                   </button>
                 )}

@@ -107,8 +107,8 @@ export default function CommunityOnboarding({ onDone }: Props) {
         <IconBadge>
           <Users size={28} color="var(--text-accent)" />
         </IconBadge>
-        <p style={{ fontWeight: 500, fontSize: 16, margin: '0 0 4px' }}>Welcome!</p>
-        <p className="muted" style={{ fontSize: 13, margin: '0 0 20px' }}>
+        <p style={{ fontWeight: 500, fontSize: 17, margin: '0 0 4px' }}>Welcome!</p>
+        <p className="muted" style={{ fontSize: 14, margin: '0 0 20px' }}>
           Are you joining an existing community, or starting a new one?
         </p>
         <button className="primary" style={{ width: '100%', marginBottom: 8 }} onClick={() => setMode('join-code')}>
@@ -127,8 +127,8 @@ export default function CommunityOnboarding({ onDone }: Props) {
         <IconBadge>
           <Users size={28} color="var(--text-accent)" />
         </IconBadge>
-        <p style={{ fontWeight: 500, fontSize: 16, margin: '0 0 4px' }}>Join your community</p>
-        <p className="muted" style={{ fontSize: 13, margin: '0 0 20px' }}>
+        <p style={{ fontWeight: 500, fontSize: 17, margin: '0 0 4px' }}>Join your community</p>
+        <p className="muted" style={{ fontSize: 14, margin: '0 0 20px' }}>
           Enter the community code someone shared with you.
         </p>
         <form onSubmit={handleLookup} style={{ textAlign: 'left' }}>
@@ -141,7 +141,7 @@ export default function CommunityOnboarding({ onDone }: Props) {
             onChange={(e) => setJoinCode(e.target.value)}
             style={{ marginBottom: 10 }}
           />
-          {error && <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 0 }}>{error}</p>}
+          {error && <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 0 }}>{error}</p>}
           <button className="primary" type="submit" disabled={loading} style={{ width: '100%', marginBottom: 8 }}>
             {loading ? 'Checking…' : 'Continue'}
           </button>
@@ -159,8 +159,8 @@ export default function CommunityOnboarding({ onDone }: Props) {
         <IconBadge>
           <Users size={28} color="var(--text-accent)" />
         </IconBadge>
-        <p style={{ fontWeight: 500, fontSize: 16, margin: '0 0 4px' }}>You're joining:</p>
-        <p style={{ fontSize: 15, margin: '0 0 20px' }}>{resolvedCommunity.name}</p>
+        <p style={{ fontWeight: 500, fontSize: 17, margin: '0 0 4px' }}>You're joining:</p>
+        <p style={{ fontSize: 16, margin: '0 0 20px' }}>{resolvedCommunity.name}</p>
         <button className="primary" style={{ width: '100%', marginBottom: 8 }} onClick={confirmJoin}>
           That's right, continue
         </button>
@@ -177,8 +177,8 @@ export default function CommunityOnboarding({ onDone }: Props) {
         <IconBadge>
           <Users size={28} color="var(--text-accent)" />
         </IconBadge>
-        <p style={{ fontWeight: 500, fontSize: 16, margin: '0 0 4px' }}>Create a community</p>
-        <p className="muted" style={{ fontSize: 13, margin: '0 0 20px' }}>
+        <p style={{ fontWeight: 500, fontSize: 17, margin: '0 0 4px' }}>Create a community</p>
+        <p className="muted" style={{ fontSize: 14, margin: '0 0 20px' }}>
           You'll be its first admin. Share the code with your neighbors so they can join.
         </p>
         <form onSubmit={handleCreateContinue} style={{ textAlign: 'left' }}>
@@ -199,7 +199,7 @@ export default function CommunityOnboarding({ onDone }: Props) {
             onChange={(e) => setNewJoinCode(e.target.value)}
             style={{ marginBottom: 10 }}
           />
-          {error && <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 0 }}>{error}</p>}
+          {error && <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 0 }}>{error}</p>}
           <button className="primary" type="submit" style={{ width: '100%', marginBottom: 8 }}>
             Continue
           </button>
@@ -217,8 +217,8 @@ export default function CommunityOnboarding({ onDone }: Props) {
       <IconBadge>
         <UserRound size={28} color="var(--text-accent)" />
       </IconBadge>
-      <p style={{ fontWeight: 500, fontSize: 16, margin: '0 0 4px' }}>Almost there</p>
-      <p className="muted" style={{ fontSize: 13, margin: '0 0 20px' }}>
+      <p style={{ fontWeight: 500, fontSize: 17, margin: '0 0 4px' }}>Almost there</p>
+      <p className="muted" style={{ fontSize: 14, margin: '0 0 20px' }}>
         What should we call you?
       </p>
       <form onSubmit={handleNameSubmit} style={{ textAlign: 'left' }}>
@@ -236,7 +236,7 @@ export default function CommunityOnboarding({ onDone }: Props) {
             display: 'flex',
             alignItems: 'flex-start',
             gap: 8,
-            fontSize: 12.5,
+            fontSize: 13.5,
             color: 'var(--text-secondary)',
             marginBottom: 14,
             cursor: 'pointer'
@@ -257,7 +257,7 @@ export default function CommunityOnboarding({ onDone }: Props) {
             missed flights, accidents, or notifications that don't arrive.
           </span>
         </label>
-        {error && <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 0 }}>{error}</p>}
+        {error && <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 0 }}>{error}</p>}
         <button className="primary" type="submit" disabled={loading || !termsAccepted} style={{ width: '100%' }}>
           {loading ? 'Saving…' : 'Continue'}
         </button>

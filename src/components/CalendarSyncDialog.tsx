@@ -57,8 +57,8 @@ export default function CalendarSyncDialog({ profile, onClose, onProfileChange }
       }}
     >
       <div className="card" style={{ width: '100%', maxWidth: 400 }}>
-        <p style={{ fontWeight: 500, fontSize: 15, margin: '0 0 4px' }}>Calendar sync</p>
-        <p className="muted" style={{ fontSize: 13, margin: '0 0 12px' }}>
+        <p style={{ fontWeight: 500, fontSize: 16, margin: '0 0 4px' }}>Calendar sync</p>
+        <p className="muted" style={{ fontSize: 14, margin: '0 0 12px' }}>
           {connected
             ? "Your calendar is connected. When neighbors need a ride, we'll check your calendar automatically instead of asking you directly."
             : "Paste your calendar's private iCal (ICS) feed URL below. We'll use it to check your availability automatically before asking you for rides - you won't be pinged for times you're already busy."}
@@ -75,7 +75,7 @@ export default function CalendarSyncDialog({ profile, onClose, onProfileChange }
             borderRadius: 'var(--radius)',
             padding: 10,
             fontFamily: 'inherit',
-            fontSize: 16,
+            fontSize: 17,
             marginBottom: 8,
             background: 'var(--surface-2)',
             color: 'var(--text-primary)'
@@ -83,14 +83,14 @@ export default function CalendarSyncDialog({ profile, onClose, onProfileChange }
         />
 
         {error && (
-          <p style={{ fontSize: 12, color: 'var(--danger, #d33)', margin: '0 0 8px' }}>{error}</p>
+          <p style={{ fontSize: 13, color: 'var(--danger, #d33)', margin: '0 0 8px' }}>{error}</p>
         )}
 
         <details style={{ marginBottom: 14 }}>
-          <summary style={{ fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer' }}>
+          <summary style={{ fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>
             Where do I find this?
           </summary>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 8, lineHeight: 1.5 }}>
             <p style={{ margin: '0 0 6px' }}>
               <strong>Google Calendar</strong>: Settings → your calendar → "Integrate calendar" → copy the
               "Secret address in iCal format."

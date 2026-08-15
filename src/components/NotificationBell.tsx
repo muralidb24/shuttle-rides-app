@@ -127,7 +127,7 @@ export default function NotificationBell({ userId }: Props) {
                 width: '100%',
                 height: 'auto',
                 padding: '6px 8px',
-                fontSize: 12,
+                fontSize: 13,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -153,12 +153,12 @@ export default function NotificationBell({ userId }: Props) {
                   background: n.read ? 'transparent' : 'var(--bg-accent)'
                 }}
               >
-                <p style={{ fontSize: 13, margin: 0 }}>{n.title}</p>
-                <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0' }}>{n.body}</p>
+                <p style={{ fontSize: 14, margin: 0 }}>{n.title}</p>
+                <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '2px 0 0' }}>{n.body}</p>
                 {n.related_user && (
                   <a
                     href={`mailto:${n.related_user.email}`}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-accent)', marginTop: 4 }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--text-accent)', marginTop: 4 }}
                   >
                     <Mail size={11} /> Email {n.related_user.full_name.split(' ')[0]}
                   </a>
@@ -173,7 +173,7 @@ export default function NotificationBell({ userId }: Props) {
                       style={{
                         height: 'auto',
                         padding: '3px 8px',
-                        fontSize: 11,
+                        fontSize: 12,
                         display: 'flex',
                         alignItems: 'center',
                         gap: 3,

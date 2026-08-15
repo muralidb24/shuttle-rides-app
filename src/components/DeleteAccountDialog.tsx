@@ -43,16 +43,16 @@ export default function DeleteAccountDialog({ onConfirm, onClose }: Props) {
       }}
     >
       <div className="card" style={{ width: '100%', maxWidth: 360 }}>
-        <p style={{ fontWeight: 500, fontSize: 15, margin: '0 0 4px' }}>Delete your account</p>
-        <p className="muted" style={{ fontSize: 13, margin: '0 0 10px' }}>
+        <p style={{ fontWeight: 500, fontSize: 16, margin: '0 0 4px' }}>Delete your account</p>
+        <p className="muted" style={{ fontSize: 14, margin: '0 0 10px' }}>
           This permanently deletes your account and everything tied to it - your profile, ride history, and
           notifications. It can't be undone.
         </p>
-        <p className="muted" style={{ fontSize: 13, margin: '0 0 10px' }}>
+        <p className="muted" style={{ fontSize: 14, margin: '0 0 10px' }}>
           Any ride you're currently committed to give will be cancelled and reopened to other neighbors, and any
           ride you've requested will be cancelled too - the other side will be notified either way.
         </p>
-        <p style={{ fontSize: 13, margin: '0 0 6px' }}>
+        <p style={{ fontSize: 14, margin: '0 0 6px' }}>
           Type <strong>{CONFIRM_TEXT}</strong> to confirm.
         </p>
         <input
@@ -64,7 +64,7 @@ export default function DeleteAccountDialog({ onConfirm, onClose }: Props) {
           autoCapitalize="characters"
           autoCorrect="off"
         />
-        {error && <p style={{ fontSize: 12, color: 'var(--danger, #d33)', margin: '0 0 8px' }}>{error}</p>}
+        {error && <p style={{ fontSize: 13, color: 'var(--danger, #d33)', margin: '0 0 8px' }}>{error}</p>}
         <div style={{ display: 'flex', gap: 8 }}>
           <button style={{ flex: 1 }} onClick={onClose} disabled={loading}>
             Cancel

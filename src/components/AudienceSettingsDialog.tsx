@@ -86,8 +86,8 @@ export default function AudienceSettingsDialog({ profile, onClose, onProfileChan
       }}
     >
       <div className="card" style={{ width: '100%', maxWidth: 420, maxHeight: '85vh', overflowY: 'auto' }}>
-        <p style={{ fontWeight: 500, fontSize: 15, margin: '0 0 4px' }}>Who can see your ride requests</p>
-        <p className="muted" style={{ fontSize: 13, margin: '0 0 12px' }}>
+        <p style={{ fontWeight: 500, fontSize: 16, margin: '0 0 4px' }}>Who can see your ride requests</p>
+        <p className="muted" style={{ fontSize: 14, margin: '0 0 12px' }}>
           This applies to every ride request you create going forward, until you change it again.
         </p>
 
@@ -100,7 +100,7 @@ export default function AudienceSettingsDialog({ profile, onClose, onProfileChan
               alignItems: 'flex-start',
               marginBottom: 10,
               cursor: 'pointer',
-              fontSize: 13
+              fontSize: 14
             }}
           >
             <input
@@ -112,7 +112,7 @@ export default function AudienceSettingsDialog({ profile, onClose, onProfileChan
             />
             <span>
               <span style={{ display: 'block', fontWeight: 500 }}>{opt.label}</span>
-              <span className="muted" style={{ fontSize: 12 }}>
+              <span className="muted" style={{ fontSize: 13 }}>
                 {opt.hint}
               </span>
             </span>
@@ -131,18 +131,18 @@ export default function AudienceSettingsDialog({ profile, onClose, onProfileChan
             }}
           >
             {loading ? (
-              <p className="muted" style={{ fontSize: 12, margin: 0 }}>
+              <p className="muted" style={{ fontSize: 13, margin: 0 }}>
                 Loading neighbors…
               </p>
             ) : allProfiles.length === 0 ? (
-              <p className="muted" style={{ fontSize: 12, margin: 0 }}>
+              <p className="muted" style={{ fontSize: 13, margin: 0 }}>
                 No other neighbors yet.
               </p>
             ) : (
               allProfiles.map((p) => (
                 <label
                   key={p.id}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, padding: '4px 0', cursor: 'pointer' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, padding: '4px 0', cursor: 'pointer' }}
                 >
                   <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleMember(p.id)} />
                   {p.full_name}
@@ -152,7 +152,7 @@ export default function AudienceSettingsDialog({ profile, onClose, onProfileChan
           </div>
         )}
 
-        {error && <p style={{ fontSize: 12, color: 'var(--danger, #d33)', margin: '0 0 8px' }}>{error}</p>}
+        {error && <p style={{ fontSize: 13, color: 'var(--danger, #d33)', margin: '0 0 8px' }}>{error}</p>}
 
         <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
           <button style={{ flex: 1 }} onClick={onClose} disabled={busy}>

@@ -40,12 +40,12 @@ export default function Login() {
   return (
     <div style={{ padding: '2rem 1.25rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-        <span style={{ fontWeight: 500, fontSize: 15 }}>Ride, please!</span>
+        <span style={{ fontWeight: 500, fontSize: 16 }}>Ride, please!</span>
       </div>
 
       {sent ? (
         <div className="card">
-          <p style={{ margin: 0, fontSize: 13 }}>
+          <p style={{ margin: 0, fontSize: 14 }}>
             Check <strong>{email}</strong> for a sign-in link.
           </p>
           <p className="hint" style={{ marginTop: 8 }}>
@@ -58,7 +58,7 @@ export default function Login() {
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
-          <p className="muted" style={{ fontSize: 13, marginTop: 0 }}>
+          <p className="muted" style={{ fontSize: 14, marginTop: 0 }}>
             Enter your email and we'll send a link to sign in.
           </p>
           <input
@@ -70,7 +70,7 @@ export default function Login() {
             style={{ marginBottom: 10 }}
           />
           {error && (
-            <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 0 }}>{error}</p>
+            <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 0 }}>{error}</p>
           )}
           <button className="primary" type="submit" disabled={loading} style={{ width: '100%' }}>
             {loading ? 'Sending…' : 'Send magic link'}

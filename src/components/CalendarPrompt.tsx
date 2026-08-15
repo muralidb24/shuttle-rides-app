@@ -34,20 +34,20 @@ export default function CalendarPrompt({ offer, onDone }: Props) {
   return (
     <div className="card" style={{ borderColor: 'var(--border-strong)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <span style={{ fontWeight: 500, fontSize: 15 }}>Ride confirmed</span>
+        <span style={{ fontWeight: 500, fontSize: 16 }}>Ride confirmed</span>
       </div>
-      <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 16px' }}>
+      <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: '0 0 16px' }}>
         You're giving {requesterName} a ride {directionLabel(request.direction)}, {formatDate(request.shuttle_date)} at{' '}
         {formatTime(request.shuttle_time)}.
       </p>
-      <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 8px' }}>Add this to your calendar?</p>
+      <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 8px' }}>Add this to your calendar?</p>
       <button className="primary" style={{ width: '100%', marginBottom: 8 }} onClick={handleAdd}>
         Add to calendar
       </button>
-      <a href={icsDownloadUrl(event)} download="ride.ics" style={{ display: 'block', textAlign: 'center', fontSize: 12, marginBottom: 8 }}>
+      <a href={icsDownloadUrl(event)} download="ride.ics" style={{ display: 'block', textAlign: 'center', fontSize: 13, marginBottom: 8 }}>
         Download .ics instead
       </a>
-      <button style={{ width: '100%', fontSize: 13 }} onClick={onDone}>
+      <button style={{ width: '100%', fontSize: 14 }} onClick={onDone}>
         No thanks, email me a reminder
       </button>
     </div>

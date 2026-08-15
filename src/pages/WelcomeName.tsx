@@ -39,8 +39,8 @@ export default function WelcomeName({ onSubmit }: Props) {
       >
         <UserRound size={28} color="var(--text-accent)" />
       </div>
-      <p style={{ fontWeight: 500, fontSize: 16, margin: '0 0 4px' }}>Welcome!</p>
-      <p className="muted" style={{ fontSize: 13, margin: '0 0 20px' }}>
+      <p style={{ fontWeight: 500, fontSize: 17, margin: '0 0 4px' }}>Welcome!</p>
+      <p className="muted" style={{ fontSize: 14, margin: '0 0 20px' }}>
         What should we call you?
       </p>
       <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
@@ -53,7 +53,7 @@ export default function WelcomeName({ onSubmit }: Props) {
           onChange={(e) => setName(e.target.value)}
           style={{ marginBottom: 10 }}
         />
-        {error && <p style={{ color: 'var(--danger)', fontSize: 12, marginTop: 0 }}>{error}</p>}
+        {error && <p style={{ color: 'var(--danger)', fontSize: 13, marginTop: 0 }}>{error}</p>}
         <button className="primary" type="submit" disabled={loading} style={{ width: '100%' }}>
           {loading ? 'Saving…' : 'Continue'}
         </button>

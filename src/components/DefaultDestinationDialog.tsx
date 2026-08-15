@@ -57,30 +57,30 @@ export default function DefaultDestinationDialog({ profile, onClose, onProfileCh
       }}
     >
       <div className="card" style={{ width: '100%', maxWidth: 420, maxHeight: '85vh', overflowY: 'auto' }}>
-        <p style={{ fontWeight: 500, fontSize: 15, margin: '0 0 4px' }}>Default destination</p>
-        <p className="muted" style={{ fontSize: 13, margin: '0 0 12px' }}>
+        <p style={{ fontWeight: 500, fontSize: 16, margin: '0 0 4px' }}>Default destination</p>
+        <p className="muted" style={{ fontSize: 14, margin: '0 0 12px' }}>
           This is pre-selected whenever you request a ride - you can still pick a different destination for any
           individual request.
         </p>
 
         {loading ? (
-          <p className="muted" style={{ fontSize: 12, margin: '0 0 8px' }}>
+          <p className="muted" style={{ fontSize: 13, margin: '0 0 8px' }}>
             Loading destinations…
           </p>
         ) : destinations.length === 0 ? (
-          <p className="muted" style={{ fontSize: 12, margin: '0 0 8px' }}>
+          <p className="muted" style={{ fontSize: 13, margin: '0 0 8px' }}>
             Your community hasn't set up any destinations yet - ask an admin to add some under Community settings.
           </p>
         ) : (
           <>
-            <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, cursor: 'pointer', fontSize: 13 }}>
+            <label style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, cursor: 'pointer', fontSize: 14 }}>
               <input type="radio" name="default-destination" checked={selectedId === null} onChange={() => setSelectedId(null)} />
               None - ask me every time
             </label>
             {destinations.map((d) => (
               <label
                 key={d.id}
-                style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, cursor: 'pointer', fontSize: 13 }}
+                style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, cursor: 'pointer', fontSize: 14 }}
               >
                 <input
                   type="radio"
@@ -94,7 +94,7 @@ export default function DefaultDestinationDialog({ profile, onClose, onProfileCh
           </>
         )}
 
-        {error && <p style={{ fontSize: 12, color: 'var(--danger, #d33)', margin: '0 0 8px' }}>{error}</p>}
+        {error && <p style={{ fontSize: 13, color: 'var(--danger, #d33)', margin: '0 0 8px' }}>{error}</p>}
 
         <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
           <button style={{ flex: 1 }} onClick={onClose} disabled={busy}>
