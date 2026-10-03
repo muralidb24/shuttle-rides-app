@@ -10,8 +10,19 @@ interface Props {
   onCancel: () => void
 }
 
+// Local calendar date in YYYY-MM-DD form (not UTC) - matters near midnight,
+// where toISOString() can land on the wrong day for the user's own timezone.
+function todayLocalISODate(): string {
+  const d = new Date()
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export default function RequestRide({ userId, defaultDestinationId, onCreated, onCancel }: Props) {
   const [direction, setDirection] = useState<Direction>('to_shuttle')
+  const minDate = todayLocalISODate()
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [destinations, setDestinations] = useState<Destination[]>([])
@@ -43,6 +54,10 @@ export default function RequestRide({ userId, defaultDestinationId, onCreated, o
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!date || !time || !destinationId) return
+    if (date < minDate) {
+      setError('Please choose today or a future date.')
+      return
+    }
     setLoading(true)
     setError(null)
     try {
@@ -94,7 +109,14 @@ export default function RequestRide({ userId, defaultDestinationId, onCreated, o
         )}
 
         <p className="label">{direction === 'to_shuttle' ? 'Travel date' : 'Return date'}</p>
-        <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} style={{ marginBottom: 10 }} />
+        <input
+          type="date"
+          required
+          min={minDate}
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          style={{ marginBottom: 10 }}
+        />
 
         <p className="label">Pickup time</p>
         <input
